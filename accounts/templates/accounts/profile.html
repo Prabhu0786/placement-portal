@@ -1,0 +1,47 @@
+{% extends "accounts/base.html" %}
+{% block title %}My profile - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="row">
+    <h1>My profile</h1>
+    <a class="btn" href="{% url 'profile_edit' %}">Edit profile</a>
+  </div>
+  <dl>
+    <dt>Name</dt><dd>{{ user.get_full_name|default:user.username }}</dd>
+    <dt>Email</dt><dd>{{ user.email }}</dd>
+    <dt>Programme and year</dt><dd>{{ profile.programme }}, year {{ profile.year }}</dd>
+    <dt>Skills</dt><dd>{{ profile.skills|default:"Not added yet" }}</dd>
+    <dt>Target roles and companies</dt><dd>{{ profile.targets|default:"Not added yet" }}</dd>
+    <dt>Data-sharing consent</dt>
+    <dd>{% if profile.consent_given %}Given on {{ profile.consent_date|date:"j M Y" }}{% else %}Not given{% endif %}</dd>
+  </dl>
+</div>
+
+<div class="card">
+  <div class="row">
+    <h2>Projects, certificates and achievements</h2>
+    <a class="btn secondary" href="{% url 'achievement_add' %}">Add new</a>
+  </div>
+  {% if achievements %}
+    <ul class="plain">
+      {% for item in achievements %}
+        <li>
+          <div class="row">
+            <div>
+              <strong>{{ item.title }}</strong> <span class="tag">{{ item.get_type_display }}</span>
+              {% if item.description %}<div class="muted">{{ item.description }}</div>{% endif %}
+              {% if item.evidence_link %}<div><a href="{{ item.evidence_link }}" rel="noopener noreferrer" target="_blank">Evidence link</a></div>{% endif %}
+            </div>
+            <form method="post" action="{% url 'achievement_delete' item.pk %}" onsubmit="return confirm('Remove this item?');">
+              {% csrf_token %}
+              <button class="btn danger" type="submit">Remove</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">Nothing added yet. Add your projects, certificates and achievements so you can explain them in interviews.</p>
+  {% endif %}
+</div>
+{% endblock %}

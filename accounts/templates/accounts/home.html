@@ -1,0 +1,11 @@
+{% extends "accounts/base.html" %}
+{% block content %}
+<div class="card">
+  <h1>Placement Preparation &amp; Skill Tracking Portal</h1>
+  <p>One place to prepare for placements: learning resources, company information, practice questions, timed mock tests, feedback, progress tracking and a weekly plan.</p>
+  <p>
+    <a class="btn" href="{% url 'register' %}">Create a student account</a>
+    <a class="btn secondary" href="{% url 'login' %}">Log in</a>
+  </p>
+</div>
+{% endblock %}

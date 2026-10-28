@@ -1,0 +1,40 @@
+{% extends "accounts/base.html" %}
+{% block title %}Dashboard - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Welcome, {{ user.get_full_name|default:user.username }}</h1>
+
+{% if user.is_student %}
+  <div class="card">
+    <h2>Your profile is {{ completeness }}% complete</h2>
+    <div class="progress" role="progressbar" aria-valuenow="{{ completeness }}" aria-valuemin="0" aria-valuemax="100">
+      <span style="width: {{ completeness }}%"></span>
+    </div>
+    <ul class="plain" style="margin-top: 12px;">
+      {% for label, done in checklist %}
+        <li>{% if done %}&#10003;{% else %}&#9675;{% endif %} {{ label }}</li>
+      {% endfor %}
+    </ul>
+    <p><a class="btn" href="{% url 'profile' %}">Open my profile</a></p>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h2>Resources</h2><p class="muted">Study materials and company information. <span class="tag">Coming in a later phase</span></p></div>
+    <div class="card"><h2>Practice</h2><p class="muted">Topic-wise coding, aptitude, verbal and technical questions. <span class="tag">Coming in a later phase</span></p></div>
+    <div class="card"><h2>Timed assessments</h2><p class="muted">Mock tests with feedback. <span class="tag">Coming in a later phase</span></p></div>
+    <div class="card"><h2>Progress and plan</h2><p class="muted">Accuracy, trends, recommendations and weekly goals. <span class="tag">Coming in a later phase</span></p></div>
+  </div>
+
+{% elif user.role_name %}
+  <div class="card">
+    <h2>{{ user.role_name }} dashboard</h2>
+    <p class="muted">Your role-specific tools will appear here as the portal is built.</p>
+    {% if user.is_staff %}<p><a class="btn" href="/admin/">Open the admin panel</a></p>{% endif %}
+  </div>
+
+{% else %}
+  <div class="card">
+    <div class="alert warning">No role is assigned to this account yet. Please ask an administrator to assign one.</div>
+    {% if user.is_staff %}<p><a class="btn" href="/admin/">Open the admin panel</a></p>{% endif %}
+  </div>
+{% endif %}
+{% endblock %}

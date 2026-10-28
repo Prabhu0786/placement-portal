@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Placement Preparation Portal{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #f5f7fb; --card: #ffffff; --text: #1b2430; --muted: #5a6675;
+      --brand: #1d3557; --accent: #2a6fdb; --accent-text: #ffffff;
+      --border: #d5dbe5; --ok: #1f7a4d; --err: #b42318; --warn-bg: #fff4d6;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+           background: var(--bg); color: var(--text); line-height: 1.5; }
+    a { color: var(--accent); }
+    .skip { position: absolute; left: -999px; }
+    .skip:focus { left: 8px; top: 8px; background: #fff; padding: 8px; z-index: 10; }
+    header { background: var(--brand); color: #fff; }
+    .bar { max-width: 960px; margin: 0 auto; padding: 12px 16px; display: flex;
+           flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+    .brand { font-weight: 700; font-size: 1.1rem; color: #fff; text-decoration: none; margin-right: auto; }
+    nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+    nav a, nav button { color: #fff; background: none; border: 0; font: inherit;
+                        cursor: pointer; text-decoration: none; padding: 4px 2px; }
+    nav a:hover, nav button:hover { text-decoration: underline; }
+    nav .who { opacity: .85; font-size: .9rem; }
+    main { max-width: 960px; margin: 24px auto; padding: 0 16px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+            padding: 20px; margin-bottom: 16px; }
+    .narrow { max-width: 520px; margin-left: auto; margin-right: auto; }
+    h1 { margin-top: 0; font-size: 1.6rem; color: var(--brand); }
+    h2 { font-size: 1.15rem; color: var(--brand); margin-top: 0; }
+    .muted { color: var(--muted); }
+    .btn { display: inline-block; background: var(--accent); color: var(--accent-text);
+           border: 0; border-radius: 6px; padding: 9px 16px; font: inherit; font-weight: 600;
+           cursor: pointer; text-decoration: none; }
+    .btn.secondary { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+    .btn.danger { background: #fff; color: var(--err); border: 1px solid var(--err); }
+    .btn:hover { filter: brightness(.95); }
+    :focus-visible { outline: 3px solid #f4b400; outline-offset: 2px; }
+    .field { margin-bottom: 14px; }
+    label { display: block; font-weight: 600; margin-bottom: 4px; }
+    label.checkbox { font-weight: 400; display: flex; gap: 8px; align-items: flex-start; }
+    input[type=text], input[type=password], input[type=email], input[type=number],
+    input[type=url], select, textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--border);
+      border-radius: 6px; font: inherit; background: #fff; color: var(--text); }
+    .help { color: var(--muted); font-size: .85rem; margin-top: 4px; }
+    .help ul { margin: 4px 0 0; padding-left: 18px; }
+    .error { color: var(--err); font-size: .9rem; margin: 4px 0 0; }
+    .alert { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; border: 1px solid var(--border); background: #fff; }
+    .alert.success { border-color: var(--ok); color: var(--ok); }
+    .alert.error { border-color: var(--err); color: var(--err); }
+    .alert.warning { background: var(--warn-bg); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+    .progress { background: #e6eaf2; border-radius: 999px; height: 12px; overflow: hidden; }
+    .progress > span { display: block; height: 100%; background: var(--ok); }
+    ul.plain { list-style: none; padding: 0; margin: 0; }
+    ul.plain li { padding: 6px 0; border-bottom: 1px solid var(--border); }
+    ul.plain li:last-child { border-bottom: 0; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+    .tag { font-size: .75rem; background: #e6eaf2; border-radius: 999px; padding: 2px 8px; color: var(--brand); }
+    dl { margin: 0; } dt { font-weight: 600; margin-top: 10px; } dd { margin: 2px 0 0; }
+    form.inline { display: inline; }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to main content</a>
+  <header>
+    <div class="bar">
+      <a class="brand" href="{% url 'home' %}">Placement Prep Portal</a>
+      <nav aria-label="Main">
+        {% if user.is_authenticated %}
+          <a href="{% url 'dashboard' %}">Dashboard</a>
+          {% if user.is_student %}<a href="{% url 'profile' %}">My profile</a>{% endif %}
+          {% if user.is_staff %}<a href="/admin/">Admin panel</a>{% endif %}
+          <span class="who">{{ user.get_full_name|default:user.username }}{% if user.role_name %} ({{ user.role_name }}){% endif %}</span>
+          <form class="inline" method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form>
+        {% else %}
+          <a href="{% url 'login' %}">Log in</a>
+          <a href="{% url 'register' %}">Register</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+  <main id="content">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert {{ message.tags }}" role="status">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

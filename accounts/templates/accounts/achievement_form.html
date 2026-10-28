@@ -1,0 +1,13 @@
+{% extends "accounts/base.html" %}
+{% block title %}Add item - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <h1>Add a project, certificate or achievement</h1>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "accounts/_form.html" %}
+    <button class="btn" type="submit">Add</button>
+    <a class="btn secondary" href="{% url 'profile' %}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

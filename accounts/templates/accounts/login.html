@@ -1,0 +1,14 @@
+{% extends "accounts/base.html" %}
+{% block title %}Log in - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <h1>Log in</h1>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "accounts/_form.html" %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn" type="submit">Log in</button>
+  </form>
+  <p>New student? <a href="{% url 'register' %}">Create an account</a></p>
+</div>
+{% endblock %}

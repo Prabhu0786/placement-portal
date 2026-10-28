@@ -1,0 +1,14 @@
+{% extends "accounts/base.html" %}
+{% block title %}Register - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <h1>Create a student account</h1>
+  <p class="muted">Placement coordinator, faculty and administrator accounts are created by an administrator.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "accounts/_form.html" %}
+    <button class="btn" type="submit">Register</button>
+  </form>
+  <p>Already registered? <a href="{% url 'login' %}">Log in</a></p>
+</div>
+{% endblock %}
