@@ -1,0 +1,54 @@
+{% extends "accounts/base.html" %}
+{% block title %}Feedback - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Your feedback</h1>
+<div class="card">
+  {% if summary.auto_total %}
+    <h2>{{ summary.auto_correct }} of {{ summary.auto_total }} auto-checked answers correct ({{ summary.percent }}%)</h2>
+    <div class="progress" role="progressbar" aria-valuenow="{{ summary.percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ summary.percent }}%"></span></div>
+  {% else %}
+    <h2>No multiple-choice questions in this session</h2>
+  {% endif %}
+  {% if summary.manual_total %}
+    <p class="muted">{{ summary.manual_total }} open question{{ summary.manual_total|pluralize }} {{ summary.manual_total|pluralize:"is,are" }} not scored automatically. Compare your answer with the model answer below.</p>
+  {% endif %}
+  {% if summary.weak_topics %}
+    <p><strong>Topics to revisit:</strong>
+      {% for t in summary.weak_topics %}<span class="tag">{{ t.subject }} / {{ t.name }}</span> {% endfor %}
+    </p>
+    <p><a class="btn secondary" href="{% url 'resource_list' %}">Browse resources</a></p>
+  {% endif %}
+</div>
+
+{% for r in responses %}
+  <div class="card">
+    <div class="row">
+      <strong>Question {{ forloop.counter }}</strong>
+      <span>
+        {% if r.is_correct is None %}<span class="tag result-manual">Not auto-checked</span>
+        {% elif r.is_correct %}<span class="tag result-correct">Correct</span>
+        {% else %}<span class="tag result-incorrect">Incorrect</span>{% endif %}
+      </span>
+    </div>
+    <p>
+      <span class="tag">{{ r.question.get_type_display }}</span>
+      <span class="tag">{{ r.question.topic.name }}</span>
+      <span class="tag">{{ r.question.get_difficulty_display }}</span>
+    </p>
+    <p>{{ r.question.text|linebreaksbr }}</p>
+    <dl>
+      <dt>Your answer</dt>
+      <dd>{% if r.answer %}{{ r.answer|linebreaksbr }}{% else %}<span class="muted">Not answered</span>{% endif %}</dd>
+      {% if r.question.answer %}
+        <dt>{% if r.is_correct is None %}Model answer{% else %}Correct answer{% endif %}</dt>
+        <dd>{{ r.question.answer|linebreaksbr }}</dd>
+      {% endif %}
+      {% if r.question.explanation %}
+        <dt>Explanation</dt>
+        <dd>{{ r.question.explanation|linebreaksbr }}</dd>
+      {% endif %}
+    </dl>
+  </div>
+{% endfor %}
+<p><a class="btn" href="{% url 'practice_home' %}">Practice again</a> <a class="btn secondary" href="{% url 'dashboard' %}">Dashboard</a></p>
+{% endblock %}

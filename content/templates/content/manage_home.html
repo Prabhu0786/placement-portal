@@ -2,15 +2,17 @@
 {% block title %}Manage content - Placement Prep Portal{% endblock %}
 {% block content %}
 <h1>Manage content</h1>
-{% if user.is_tpo and pending_resources or user.is_tpo and pending_companies %}
+{% if user.is_tpo and pending_resources or user.is_tpo and pending_companies or user.is_tpo and pending_questions %}
   <div class="alert warning" role="status">
     Waiting for your review:
     {% if pending_resources %}<a href="{% url 'manage_resources' %}?status=pending_review">{{ pending_resources }} resource{{ pending_resources|pluralize }}</a>{% endif %}
+    {% if pending_questions %}<a href="{% url 'manage_questions' %}?status=pending_review">{{ pending_questions }} question{{ pending_questions|pluralize }}</a>{% endif %}
     {% if pending_companies %}<a href="{% url 'manage_companies' %}?status=pending_review">{{ pending_companies }} compan{{ pending_companies|pluralize:"y,ies" }}</a>{% endif %}
   </div>
 {% endif %}
 <div class="grid">
   <div class="card"><h2>Resources</h2><p class="muted">Study materials students can browse.</p><a class="btn" href="{% url 'manage_resources' %}">Manage resources</a></div>
+  <div class="card"><h2>Questions</h2><p class="muted">Practice questions: multiple choice and open.</p><a class="btn" href="{% url 'manage_questions' %}">Manage questions</a></div>
   {% if user.is_tpo %}
   <div class="card"><h2>Companies</h2><p class="muted">Eligibility, stages, source and updated date.</p><a class="btn" href="{% url 'manage_companies' %}">Manage companies</a></div>
   {% endif %}
@@ -20,10 +22,10 @@
   <h2>Content by status</h2>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>Status</th><th>Resources</th>{% if user.is_tpo %}<th>Companies</th>{% endif %}</tr></thead>
+    <thead><tr><th>Status</th><th>Resources</th><th>Questions</th>{% if user.is_tpo %}<th>Companies</th>{% endif %}</tr></thead>
     <tbody>
-      {% for value, label, resources, companies in statuses %}
-        <tr><td><span class="tag status-{{ value }}">{{ label }}</span></td><td>{{ resources }}</td>{% if user.is_tpo %}<td>{{ companies }}</td>{% endif %}</tr>
+      {% for value, label, resources, companies, questions in statuses %}
+        <tr><td><span class="tag status-{{ value }}">{{ label }}</span></td><td>{{ resources }}</td><td>{{ questions }}</td>{% if user.is_tpo %}<td>{{ companies }}</td>{% endif %}</tr>
       {% endfor %}
     </tbody>
   </table>

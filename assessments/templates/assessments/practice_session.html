@@ -1,0 +1,37 @@
+{% extends "accounts/base.html" %}
+{% block title %}Practice session - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Practice session</h1>
+<p class="muted">{{ responses|length }} question{{ responses|length|pluralize }}. Feedback appears after you submit.</p>
+<form method="post">
+  {% csrf_token %}
+  {% for r in responses %}
+    <div class="card">
+      <fieldset style="border: 0; padding: 0; margin: 0;">
+        <legend style="padding: 0; margin-bottom: 6px;">
+          <strong>Question {{ forloop.counter }}</strong>
+          <span class="tag">{{ r.question.get_type_display }}</span>
+          <span class="tag">{{ r.question.topic.name }}</span>
+          <span class="tag">{{ r.question.get_difficulty_display }}</span>
+        </legend>
+        <p>{{ r.question.text|linebreaksbr }}</p>
+        {% if r.question.options %}
+          {% for option in r.question.options %}
+            <div class="field" style="margin-bottom: 6px;">
+              <label class="checkbox"><input type="radio" name="q_{{ r.question_id }}" value="{{ option }}"> <span>{{ option }}</span></label>
+            </div>
+          {% endfor %}
+        {% else %}
+          <label for="q_{{ r.question_id }}">Your answer</label>
+          <textarea id="q_{{ r.question_id }}" name="q_{{ r.question_id }}" rows="6"></textarea>
+          <div class="help">Open question: it is not scored automatically. You will compare your answer with the model answer.</div>
+        {% endif %}
+      </fieldset>
+    </div>
+  {% endfor %}
+  <p>
+    <button class="btn" type="submit" onclick="return confirm('Submit your answers? You cannot change them afterwards.');">Submit answers</button>
+    <a class="btn secondary" href="{% url 'practice_home' %}">Save for later</a>
+  </p>
+</form>
+{% endblock %}

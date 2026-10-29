@@ -1,0 +1,49 @@
+{% extends "accounts/base.html" %}
+{% block title %}Practice - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Practice questions</h1>
+<div class="card">
+  <h2>Start a practice session</h2>
+  <p class="muted">{{ available }} published question{{ available|pluralize }} available. Choose filters, or leave them open for a mixed set.</p>
+  <form method="post" action="{% url 'practice_start' %}" novalidate>
+    {% csrf_token %}
+    <div class="filters">
+      {% for field in form %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% for error in field.errors %}<p class="error" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <p style="margin-top: 14px;"><button class="btn" type="submit">Start practice</button></p>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Your recent sessions</h2>
+  {% if attempts %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Started</th><th>Questions</th><th>Status</th><th>Score</th><th></th></tr></thead>
+    <tbody>
+    {% for a in attempts %}
+      <tr>
+        <td>{{ a.started_at|date:"j M Y, g:i a" }}</td>
+        <td>{{ a.question_count }}</td>
+        <td>{{ a.get_status_display }}</td>
+        <td>{% if a.score is not None %}{{ a.score|floatformat:"0" }} correct{% else %}-{% endif %}</td>
+        <td>
+          {% if a.status == "in_progress" %}<a class="btn small" href="{% url 'practice_session' a.pk %}">Continue</a>
+          {% elif a.status == "evaluated" or a.status == "reviewed" %}<a class="btn secondary small" href="{% url 'practice_result' a.pk %}">View feedback</a>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+    <p class="muted">No sessions yet. Start your first one above.</p>
+  {% endif %}
+</div>
+{% endblock %}

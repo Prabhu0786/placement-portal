@@ -1,0 +1,61 @@
+{% extends "accounts/base.html" %}
+{% block title %}Manage questions - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Questions</h1>
+  <a class="btn" href="{% url 'question_create' %}">Add a question</a>
+</div>
+<p><a href="{% url 'manage_home' %}">&larr; Manage content</a></p>
+<div class="card">
+  <form method="get" class="filters">
+    <div class="field">
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        <option value="">All</option>
+        {% for value, label in statuses %}<option value="{{ value }}"{% if value == status %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="type">Type</label>
+      <select id="type" name="type">
+        <option value="">All</option>
+        {% for value, label in types %}<option value="{{ value }}"{% if value == qtype %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><button class="btn" type="submit">Filter</button></div>
+  </form>
+</div>
+<div class="card">
+  {% if page.object_list %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Question</th><th>Topic</th><th>Type</th><th>Status</th><th>Added by</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for q in page.object_list %}
+      <tr>
+        <td>{{ q.text|truncatechars:90 }}{% if q.options %}<div class="muted">Multiple choice, {{ q.options|length }} options</div>{% else %}<div class="muted">Open question</div>{% endif %}</td>
+        <td>{{ q.topic }}</td>
+        <td>{{ q.get_type_display }}<div class="muted">{{ q.get_difficulty_display }}</div></td>
+        <td><span class="tag status-{{ q.status }}">{{ q.get_status_display }}</span></td>
+        <td>{{ q.created_by|default:"-" }}</td>
+        <td>
+          <div class="actions">
+            {% if q.editable %}<a class="btn secondary small" href="{% url 'question_edit' q.pk %}">Edit</a>{% endif %}
+            {% for to, label in q.actions %}
+              <form class="inline" method="post" action="{% url 'question_transition' q.pk %}">{% csrf_token %}
+                <input type="hidden" name="to" value="{{ to }}"><button class="btn small" type="submit">{{ label }}</button>
+              </form>
+            {% endfor %}
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% include "content/_pager.html" %}
+  {% else %}
+    <p class="muted">No questions found.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -75,6 +75,9 @@
     .status-pending_review { background: #fff0c2; color: #6b4e00; }
     .status-draft { background: #e6eaf2; color: #1d3557; }
     .status-archived { background: #eee; color: #555; }
+    .result-correct { background: #d9f2e4; color: #14532d; }
+    .result-incorrect { background: #fde2e0; color: #7a1710; }
+    .result-manual { background: #e6eaf2; color: #1d3557; }
   </style>
 </head>
 <body>
@@ -85,6 +88,7 @@
       <nav aria-label="Main">
         {% if user.is_authenticated %}
           <a href="{% url 'dashboard' %}">Dashboard</a>
+          {% if user.is_student %}<a href="{% url 'practice_home' %}">Practice</a>{% endif %}
           <a href="{% url 'resource_list' %}">Resources</a>
           <a href="{% url 'company_list' %}">Companies</a>
           {% if user.is_student %}<a href="{% url 'profile' %}">My profile</a>{% endif %}

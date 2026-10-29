@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 from accounts.permissions import role_required
 
 from . import workflow
-from .forms import CompanyForm, ResourceFilterForm, ResourceForm, TopicForm
+from .forms import CompanyForm, QuestionForm, ResourceFilterForm, ResourceForm, TopicForm
 from .models import Company, ContentStatus, Question, Resource, Topic
 
 PUBLISHED = ContentStatus.PUBLISHED
@@ -112,8 +112,20 @@ def manage_home(request):
         row["status"]: row["n"]
         for row in Company.objects.values("status").annotate(n=Count("id"))
     }
-    statuses = [(value, label, resource_counts.get(value, 0), company_counts.get(value, 0))
-                for value, label in ContentStatus.choices]
+    question_counts = {
+        row["status"]: row["n"]
+        for row in Question.objects.values("status").annotate(n=Count("id"))
+    }
+    statuses = [
+        (
+            value,
+            label,
+            resource_counts.get(value, 0),
+            company_counts.get(value, 0),
+            question_counts.get(value, 0),
+        )
+        for value, label in ContentStatus.choices
+    ]
     return render(
         request,
         "content/manage_home.html",
@@ -121,6 +133,7 @@ def manage_home(request):
             "statuses": statuses,
             "pending_resources": resource_counts.get("pending_review", 0),
             "pending_companies": company_counts.get("pending_review", 0),
+            "pending_questions": question_counts.get("pending_review", 0),
         },
     )
 
@@ -295,3 +308,79 @@ def topic_edit(request, pk):
         "content/form.html",
         {"title": "Edit topic", "form": form, "cancel_url": "manage_topics"},
     )
+
+
+@role_required("TPO", "Faculty")
+def manage_questions(request):
+    status = _status_filter(request)
+    qtype = request.GET.get("type", "")
+    questions = Question.objects.select_related("topic", "created_by").order_by("-id")
+    if status:
+        questions = questions.filter(status=status)
+    if qtype in Question.QuestionType.values:
+        questions = questions.filter(type=qtype)
+    else:
+        qtype = ""
+    page = Paginator(questions, 20).get_page(request.GET.get("page"))
+    _annotate(page.object_list, request.user)
+    params = request.GET.copy()
+    params.pop("page", None)
+    return render(
+        request,
+        "content/manage_questions.html",
+        {
+            "page": page,
+            "status": status,
+            "qtype": qtype,
+            "statuses": ContentStatus.choices,
+            "types": Question.QuestionType.choices,
+            "querystring": params.urlencode(),
+        },
+    )
+
+
+@role_required("TPO", "Faculty")
+def question_create(request):
+    if request.method == "POST":
+        form = QuestionForm(request.POST)
+        if form.is_valid():
+            question = form.save(commit=False)
+            question.created_by = request.user
+            question.status = ContentStatus.DRAFT
+            question.save()
+            messages.success(request, "Question saved as a draft.")
+            return redirect("manage_questions")
+    else:
+        form = QuestionForm()
+    return render(
+        request,
+        "content/form.html",
+        {"title": "Add a question", "form": form, "cancel_url": "manage_questions"},
+    )
+
+
+@role_required("TPO", "Faculty")
+def question_edit(request, pk):
+    question = get_object_or_404(Question, pk=pk)
+    if not workflow.can_edit(request.user, question):
+        raise PermissionDenied
+    if request.method == "POST":
+        form = QuestionForm(request.POST, instance=question)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Question updated.")
+            return redirect("manage_questions")
+    else:
+        form = QuestionForm(instance=question)
+    return render(
+        request,
+        "content/form.html",
+        {"title": "Edit question", "form": form, "cancel_url": "manage_questions"},
+    )
+
+
+@role_required("TPO", "Faculty")
+@require_POST
+def question_transition(request, pk):
+    _apply_transition(request, get_object_or_404(Question, pk=pk))
+    return redirect("manage_questions")

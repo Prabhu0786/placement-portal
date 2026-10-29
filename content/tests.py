@@ -263,3 +263,169 @@ class NavigationTests(ContentTestCase):
         self.assertNotContains(self.client.get(reverse("dashboard")), "Manage content")
         self.client.logout(); self.login(self.tpo)
         self.assertContains(self.client.get(reverse("dashboard")), "Manage content")
+
+
+class QuestionManagementTests(ContentTestCase):
+    def data(self, **overrides):
+        data = {
+            "topic": self.aptitude.pk, "company": "", "type": "aptitude", "difficulty": "easy",
+            "text": "What is 10% of 200?", "options_text": "10\n20\n30", "answer": "20",
+            "explanation": "Because.",
+        }
+        data.update(overrides)
+        return data
+
+    def test_student_cannot_manage_questions(self):
+        self.login(self.student)
+        self.assertEqual(self.client.get(reverse("manage_questions")).status_code, 403)
+
+    def test_faculty_creates_mcq_as_draft(self):
+        self.login(self.faculty)
+        self.client.post(reverse("question_create"), self.data(answer=" 20 "))
+        q = Question.objects.get()
+        self.assertEqual(q.status, DRAFT)
+        self.assertEqual(q.created_by, self.faculty)
+        self.assertEqual(q.options, ["10", "20", "30"])
+        self.assertEqual(q.answer, "20")
+
+    def test_mcq_answer_must_match_an_option(self):
+        self.login(self.tpo)
+        response = self.client.post(reverse("question_create"), self.data(answer="99"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Question.objects.count(), 0)
+
+    def test_mcq_needs_two_different_options(self):
+        self.login(self.tpo)
+        self.client.post(reverse("question_create"), self.data(options_text="20"))
+        self.client.post(reverse("question_create"), self.data(options_text="20\n20"))
+        self.assertEqual(Question.objects.count(), 0)
+
+    def test_open_question_has_no_options(self):
+        self.login(self.tpo)
+        self.client.post(reverse("question_create"), self.data(
+            type="coding", options_text="", answer="Use two pointers."))
+        q = Question.objects.get()
+        self.assertEqual(q.options, [])
+
+    def test_edit_shows_existing_options(self):
+        q = Question.objects.create(topic=self.aptitude, type="aptitude", text="T", options=["a", "b"],
+                                    answer="a", status=DRAFT, created_by=self.tpo)
+        self.login(self.tpo)
+        self.assertContains(self.client.get(reverse("question_edit", args=[q.pk])), "a\nb")
+
+    def test_question_lifecycle_and_faculty_limits(self):
+        q = Question.objects.create(topic=self.aptitude, type="aptitude", text="T", options=["a", "b"],
+                                    answer="a", status=DRAFT, created_by=self.faculty)
+        url = reverse("question_transition", args=[q.pk])
+        self.login(self.faculty)
+        self.client.post(url, {"to": PENDING}); q.refresh_from_db()
+        self.assertEqual(q.status, PENDING)
+        self.assertEqual(self.client.post(url, {"to": PUBLISHED}).status_code, 403)
+        self.client.logout(); self.login(self.tpo)
+        self.client.post(url, {"to": PUBLISHED}); q.refresh_from_db()
+        self.assertEqual(q.status, PUBLISHED)
+
+    def test_manage_questions_filters_and_pages_load(self):
+        Question.objects.create(topic=self.aptitude, type="coding", text="C", status=DRAFT, created_by=self.tpo)
+        self.login(self.tpo)
+        for params in ({}, {"status": "draft"}, {"type": "coding"}, {"type": "bogus"}):
+            self.assertEqual(self.client.get(reverse("manage_questions"), params).status_code, 200)
+        self.assertContains(self.client.get(reverse("manage_home")), "Manage questions")
+
+
+class SampleQuestionDataTests(TestCase):
+    """The sample data must be internally consistent, otherwise students would be marked wrong."""
+
+    def test_every_mcq_answer_matches_an_option(self):
+        from content.management.commands.seed_sample_questions import QUESTIONS, TOPICS
+
+        topic_names = {name for _, name, _ in TOPICS}
+        for item in QUESTIONS:
+            self.assertIn(item["topic"], topic_names, item["text"])
+            if item["options"]:
+                self.assertIn(item["answer"], item["options"], item["text"])
+                self.assertEqual(len(set(item["options"])), len(item["options"]), item["text"])
+            else:
+                self.assertTrue(item["answer"].strip(), item["text"])
+
+    def test_command_is_repeatable_and_publishes(self):
+        from django.core.management import call_command
+
+        call_command("seed_sample_questions", verbosity=0)
+        total = Question.objects.count()
+        self.assertGreaterEqual(total, 25)
+        self.assertEqual(Question.objects.exclude(status=PUBLISHED).count(), 0)
+        call_command("seed_sample_questions", verbosity=0)
+        self.assertEqual(Question.objects.count(), total)
+
+    def test_draft_option(self):
+        from django.core.management import call_command
+
+        call_command("seed_sample_questions", "--draft", verbosity=0)
+        self.assertEqual(Question.objects.exclude(status=DRAFT).count(), 0)
+
+    def test_reference_solutions_run_correctly(self):
+        from content.management.commands.seed_sample_questions import QUESTIONS
+
+        def solution(keyword):
+            return next(q["answer"] for q in QUESTIONS if keyword in q["text"])
+
+        ns = {}
+        exec(solution("reverses an array"), ns)
+        self.assertEqual(ns["reverse"]([1, 2, 3, 4]), [4, 3, 2, 1])
+        self.assertEqual(ns["reverse"]([]), [])
+        ns2 = {}
+        exec(solution("second largest"), ns2)
+        self.assertEqual(ns2["second_largest"]([5, 1, 9, 7]), 7)
+        self.assertEqual(ns2["second_largest"]([5, 5, 5]), None)
+        self.assertEqual(ns2["second_largest"]([2, 8]), 2)
+        self.assertEqual(ns2["second_largest"]([9, 9, 4]), 4)
+
+
+class SampleResourceDataTests(TestCase):
+    def test_data_is_consistent(self):
+        from django.core.validators import URLValidator
+
+        from content.management.commands.seed_sample_questions import TOPICS
+        from content.management.commands.seed_sample_resources import RESOURCES
+
+        topic_names = {name for _, name, _ in TOPICS}
+        valid_types = set(Resource.ResourceType.values)
+        validator = URLValidator(schemes=["https"])
+        seen = set()
+        for topic, title, rtype, url, source in RESOURCES:
+            self.assertIn(topic, topic_names, title)
+            self.assertIn(rtype, valid_types, title)
+            validator(url)  # raises if not a valid https URL
+            self.assertTrue(source, title)
+            self.assertNotIn((topic, title), seen)
+            seen.add((topic, title))
+
+    def test_command_is_repeatable_and_students_see_resources(self):
+        from django.core.management import call_command
+
+        call_command("seed_sample_resources", verbosity=0)
+        total = Resource.objects.count()
+        self.assertGreaterEqual(total, 20)
+        self.assertEqual(Resource.objects.exclude(status=PUBLISHED).count(), 0)
+        call_command("seed_sample_resources", verbosity=0)
+        self.assertEqual(Resource.objects.count(), total)
+        student = make_user("stu", "Student")
+        self.client.login(username="stu", password=PASSWORD)
+        response = self.client.get(reverse("resource_list"), {"subject": "DBMS"})
+        self.assertContains(response, "SQL joins")
+
+    def test_draft_option_keeps_resources_hidden(self):
+        from django.core.management import call_command
+
+        call_command("seed_sample_resources", "--draft", verbosity=0)
+        make_user("stu", "Student")
+        self.client.login(username="stu", password=PASSWORD)
+        self.assertNotContains(self.client.get(reverse("resource_list")), "SQL joins")
+
+    def test_works_together_with_question_loader(self):
+        from django.core.management import call_command
+
+        call_command("seed_sample_questions", verbosity=0)
+        call_command("seed_sample_resources", verbosity=0)
+        self.assertEqual(Topic.objects.count(), 10)
