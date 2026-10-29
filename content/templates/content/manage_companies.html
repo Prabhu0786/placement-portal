@@ -1,0 +1,53 @@
+{% extends "accounts/base.html" %}
+{% block title %}Manage companies - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Companies</h1>
+  <a class="btn" href="{% url 'company_create' %}">Add a company</a>
+</div>
+<p><a href="{% url 'manage_home' %}">&larr; Manage content</a></p>
+<div class="card">
+  <form method="get" class="filters">
+    <div class="field">
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        <option value="">All</option>
+        {% for value, label in statuses %}<option value="{{ value }}"{% if value == status %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><button class="btn" type="submit">Filter</button></div>
+  </form>
+</div>
+<div class="card">
+  {% if page.object_list %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Company</th><th>Source</th><th>Updated</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for c in page.object_list %}
+      <tr>
+        <td>{{ c.name }}</td>
+        <td>{{ c.source }}</td>
+        <td>{{ c.updated_at|date:"j M Y" }}</td>
+        <td><span class="tag status-{{ c.status }}">{{ c.get_status_display }}</span></td>
+        <td>
+          <div class="actions">
+            <a class="btn secondary small" href="{% url 'company_edit' c.pk %}">Edit</a>
+            {% for to, label in c.actions %}
+              <form class="inline" method="post" action="{% url 'company_transition' c.pk %}">{% csrf_token %}
+                <input type="hidden" name="to" value="{{ to }}"><button class="btn small" type="submit">{{ label }}</button>
+              </form>
+            {% endfor %}
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% include "content/_pager.html" %}
+  {% else %}
+    <p class="muted">No companies found.</p>
+  {% endif %}
+</div>
+{% endblock %}

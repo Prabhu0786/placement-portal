@@ -1,0 +1,43 @@
+{% extends "accounts/base.html" %}
+{% block title %}Resources - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Learning resources</h1>
+<div class="card">
+  <form method="get" class="filters">
+    {% for field in form %}
+      <div class="field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+      </div>
+    {% endfor %}
+    <div class="field">
+      <button class="btn" type="submit">Filter</button>
+      <a class="btn secondary" href="{% url 'resource_list' %}">Reset</a>
+    </div>
+  </form>
+</div>
+
+{% if page.object_list %}
+  <p class="muted">{{ page.paginator.count }} resource{{ page.paginator.count|pluralize }} found.</p>
+  {% for r in page.object_list %}
+    <div class="card">
+      <div class="row">
+        <div>
+          <h2 style="margin-bottom: 4px;">{{ r.title }}</h2>
+          <span class="tag">{{ r.topic.subject }} / {{ r.topic.name }}</span>
+          <span class="tag">{{ r.topic.get_difficulty_display }}</span>
+          <span class="tag">{{ r.get_type_display }}</span>
+          {% if r.company %}<span class="tag">{{ r.company.name }}</span>{% endif %}
+          <div class="muted" style="margin-top: 6px;">
+            {% if r.source %}Source: {{ r.source }}. {% endif %}Updated {{ r.updated_at|date:"j M Y" }}
+          </div>
+        </div>
+        <a class="btn" href="{{ r.url }}" target="_blank" rel="noopener noreferrer">Open resource</a>
+      </div>
+    </div>
+  {% endfor %}
+  {% include "content/_pager.html" %}
+{% else %}
+  <div class="card"><p class="muted">No published resources match your filters yet.</p></div>
+{% endif %}
+{% endblock %}

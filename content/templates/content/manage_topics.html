@@ -1,0 +1,28 @@
+{% extends "accounts/base.html" %}
+{% block title %}Manage topics - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Topics</h1>
+  <a class="btn" href="{% url 'topic_create' %}">Add a topic</a>
+</div>
+<p><a href="{% url 'manage_home' %}">&larr; Manage content</a></p>
+<div class="card">
+  {% if topics %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Subject</th><th>Topic</th><th>Difficulty</th><th>Resources</th><th></th></tr></thead>
+    <tbody>
+    {% for t in topics %}
+      <tr>
+        <td>{{ t.subject }}</td><td>{{ t.name }}</td><td>{{ t.get_difficulty_display }}</td><td>{{ t.resource_count }}</td>
+        <td><a class="btn secondary small" href="{% url 'topic_edit' t.pk %}">Edit</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+    <p class="muted">No topics yet. Add one before adding resources.</p>
+  {% endif %}
+</div>
+{% endblock %}

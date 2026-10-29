@@ -1,0 +1,49 @@
+{% extends "accounts/base.html" %}
+{% block title %}{{ company.name }} - Placement Prep Portal{% endblock %}
+{% block content %}
+<p><a href="{% url 'company_list' %}">&larr; All companies</a></p>
+<div class="card">
+  <h1>{{ company.name }}</h1>
+  <p class="muted">Source: {{ company.source }}. Last updated {{ company.updated_at|date:"j M Y" }}.</p>
+  <h2>Eligibility</h2>
+  <p>{{ company.eligibility|default:"Not provided yet."|linebreaksbr }}</p>
+  <h2>Recruitment stages</h2>
+  {% if stages %}
+    <ol>{% for stage in stages %}<li>{{ stage }}</li>{% endfor %}</ol>
+  {% else %}
+    <p class="muted">Not provided yet.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Resources for {{ company.name }}</h2>
+  {% if resources %}
+    <ul class="plain">
+      {% for r in resources %}
+        <li>
+          <a href="{{ r.url }}" target="_blank" rel="noopener noreferrer">{{ r.title }}</a>
+          <span class="tag">{{ r.topic.name }}</span> <span class="tag">{{ r.get_type_display }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">No resources published for this company yet.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Previous questions</h2>
+  {% if questions %}
+    <ul class="plain">
+      {% for q in questions %}
+        <li>
+          <span class="tag">{{ q.get_type_display }}</span> <span class="tag">{{ q.topic.name }}</span> <span class="tag">{{ q.get_difficulty_display }}</span>
+          <div>{{ q.text|linebreaksbr }}</div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">No previous questions published for this company yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

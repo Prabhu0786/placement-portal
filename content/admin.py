@@ -12,7 +12,8 @@ class TopicAdmin(admin.ModelAdmin):
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ("name", "source", "updated_at")
+    list_display = ("name", "status", "source", "updated_at")
+    list_filter = ("status",)
     search_fields = ("name",)
 
 

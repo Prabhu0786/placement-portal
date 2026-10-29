@@ -1,0 +1,30 @@
+{% extends "accounts/base.html" %}
+{% block title %}Companies - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Company preparation</h1>
+<div class="card">
+  <form method="get" class="filters">
+    <div class="field">
+      <label for="q">Search by company name</label>
+      <input type="text" id="q" name="q" value="{{ q }}">
+    </div>
+    <div class="field">
+      <button class="btn" type="submit">Search</button>
+      <a class="btn secondary" href="{% url 'company_list' %}">Reset</a>
+    </div>
+  </form>
+</div>
+{% if companies %}
+  <div class="grid">
+    {% for c in companies %}
+      <div class="card">
+        <h2>{{ c.name }}</h2>
+        <p class="muted">Updated {{ c.updated_at|date:"j M Y" }}</p>
+        <a class="btn secondary" href="{% url 'company_detail' c.pk %}">View preparation details</a>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card"><p class="muted">No companies have been published yet.</p></div>
+{% endif %}
+{% endblock %}

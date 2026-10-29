@@ -1,0 +1,53 @@
+{% extends "accounts/base.html" %}
+{% block title %}Manage resources - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Resources</h1>
+  <a class="btn" href="{% url 'resource_create' %}">Add a resource</a>
+</div>
+<p><a href="{% url 'manage_home' %}">&larr; Manage content</a></p>
+<div class="card">
+  <form method="get" class="filters">
+    <div class="field">
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        <option value="">All</option>
+        {% for value, label in statuses %}<option value="{{ value }}"{% if value == status %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><button class="btn" type="submit">Filter</button></div>
+  </form>
+</div>
+<div class="card">
+  {% if page.object_list %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Title</th><th>Topic</th><th>Status</th><th>Added by</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for r in page.object_list %}
+      <tr>
+        <td><a href="{{ r.url }}" target="_blank" rel="noopener noreferrer">{{ r.title }}</a><div class="muted">{{ r.get_type_display }}</div></td>
+        <td>{{ r.topic }}</td>
+        <td><span class="tag status-{{ r.status }}">{{ r.get_status_display }}</span></td>
+        <td>{{ r.created_by|default:"-" }}</td>
+        <td>
+          <div class="actions">
+            {% if r.editable %}<a class="btn secondary small" href="{% url 'resource_edit' r.pk %}">Edit</a>{% endif %}
+            {% for to, label in r.actions %}
+              <form class="inline" method="post" action="{% url 'resource_transition' r.pk %}">{% csrf_token %}
+                <input type="hidden" name="to" value="{{ to }}"><button class="btn small" type="submit">{{ label }}</button>
+              </form>
+            {% endfor %}
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% include "content/_pager.html" %}
+  {% else %}
+    <p class="muted">No resources found.</p>
+  {% endif %}
+</div>
+{% endblock %}

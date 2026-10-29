@@ -62,6 +62,19 @@
     .tag { font-size: .75rem; background: #e6eaf2; border-radius: 999px; padding: 2px 8px; color: var(--brand); }
     dl { margin: 0; } dt { font-weight: 600; margin-top: 10px; } dd { margin: 2px 0 0; }
     form.inline { display: inline; }
+    .btn.small { padding: 4px 10px; font-size: .85rem; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { font-size: .85rem; color: var(--muted); }
+    .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; align-items: end; }
+    .filters .field { margin-bottom: 0; }
+    .pager { display: flex; gap: 14px; align-items: center; margin-top: 12px; }
+    .status-published { background: #d9f2e4; color: #14532d; }
+    .status-pending_review { background: #fff0c2; color: #6b4e00; }
+    .status-draft { background: #e6eaf2; color: #1d3557; }
+    .status-archived { background: #eee; color: #555; }
   </style>
 </head>
 <body>
@@ -72,7 +85,10 @@
       <nav aria-label="Main">
         {% if user.is_authenticated %}
           <a href="{% url 'dashboard' %}">Dashboard</a>
+          <a href="{% url 'resource_list' %}">Resources</a>
+          <a href="{% url 'company_list' %}">Companies</a>
           {% if user.is_student %}<a href="{% url 'profile' %}">My profile</a>{% endif %}
+          {% if user.is_tpo or user.is_faculty %}<a href="{% url 'manage_home' %}">Manage content</a>{% endif %}
           {% if user.is_staff %}<a href="/admin/">Admin panel</a>{% endif %}
           <span class="who">{{ user.get_full_name|default:user.username }}{% if user.role_name %} ({{ user.role_name }}){% endif %}</span>
           <form class="inline" method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form>

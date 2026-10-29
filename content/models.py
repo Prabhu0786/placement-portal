@@ -38,6 +38,9 @@ class Company(models.Model):
     stages = models.TextField(blank=True, help_text="Recruitment stages, one per line.")
     # BR-3: company information must include a source and an updated date.
     source = models.CharField(max_length=255)
+    status = models.CharField(
+        max_length=20, choices=ContentStatus.choices, default=ContentStatus.DRAFT
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
