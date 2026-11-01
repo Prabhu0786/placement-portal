@@ -1,6 +1,8 @@
 venv/
+venv32_backup/
 __pycache__/
 *.pyc
 db.sqlite3
 .env
 .vscode/
+data.json
