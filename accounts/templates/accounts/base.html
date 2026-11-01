@@ -87,6 +87,20 @@
                     border-radius: 6px; padding: 8px 10px; }
     #id_questions div { margin-bottom: 6px; }
     #id_questions label { font-weight: 400; display: flex; gap: 8px; align-items: flex-start; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .stat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--muted); font-size: .9rem; }
+    .stat strong { display: block; font-size: 1.7rem; color: var(--brand); }
+    .bar-strong > span { background: #1f7a4d; }
+    .bar-developing > span { background: #b7791f; }
+    .bar-weak > span { background: #b42318; }
+    .bar-nodata > span { background: #8793a5; }
+    .level-strong { background: #d9f2e4; color: #14532d; }
+    .level-developing { background: #fff0c2; color: #6b4e00; }
+    .level-weak { background: #fde2e0; color: #7a1710; }
+    .level-nodata { background: #e6eaf2; color: #1d3557; }
+    details { margin-top: 10px; } summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+    @media print { header, .no-print, .skip { display: none !important; } body { background: #fff; }
+                   .card, .stat { break-inside: avoid; border-color: #999; } }
     fieldset.field-group { border: 0; padding: 0; margin: 0 0 14px; }
     fieldset.field-group legend { font-weight: 600; padding: 0; margin-bottom: 4px; }
   </style>
@@ -99,7 +113,8 @@
       <nav aria-label="Main">
         {% if user.is_authenticated %}
           <a href="{% url 'dashboard' %}">Dashboard</a>
-          {% if user.is_student %}<a href="{% url 'practice_home' %}">Practice</a><a href="{% url 'assessment_list' %}">Assessments</a>{% endif %}
+          {% if user.is_student %}<a href="{% url 'practice_home' %}">Practice</a><a href="{% url 'assessment_list' %}">Assessments</a><a href="{% url 'progress' %}">Progress</a>{% endif %}
+          {% if user.is_tpo %}<a href="{% url 'reports_home' %}">Reports</a>{% endif %}
           <a href="{% url 'resource_list' %}">Resources</a>
           <a href="{% url 'company_list' %}">Companies</a>
           {% if user.is_student %}<a href="{% url 'profile' %}">My profile</a>{% endif %}

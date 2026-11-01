@@ -1,0 +1,76 @@
+{% extends "accounts/base.html" %}
+{% block title %}Weekly report - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="row no-print">
+  <h1>Weekly report</h1>
+  <button class="btn" type="button" onclick="window.print()">Print or save as PDF</button>
+</div>
+<p class="no-print"><a href="{% url 'progress' %}">&larr; My progress</a></p>
+
+<div class="card">
+  <div class="row">
+    <h2>{{ report.start|date:"j M" }} to {{ report.end|date:"j M Y" }}{% if is_current %} (this week){% endif %}</h2>
+    <span class="no-print">
+      <a class="btn secondary small" href="?week={{ previous_week|date:'Y-m-d' }}">&larr; Earlier week</a>
+      {% if next_week %}<a class="btn secondary small" href="?week={{ next_week|date:'Y-m-d' }}">Later week &rarr;</a>{% endif %}
+    </span>
+  </div>
+  {% with s=report.summary p=report.previous %}
+  <div class="stats">
+    <div class="stat"><strong>{{ s.attempts }}</strong>Attempts completed</div>
+    <div class="stat"><strong>{{ s.answered }}</strong>Questions answered</div>
+    <div class="stat"><strong>{% if s.accuracy is not None %}{{ s.accuracy|floatformat:"0" }}%{% else %}-{% endif %}</strong>Accuracy</div>
+    <div class="stat"><strong>{{ s.minutes }}</strong>Minutes of practice</div>
+  </div>
+  {% if report.change is not None %}
+    <p>Compared with the week before ({{ p.accuracy|floatformat:"0" }}%): accuracy
+      {% if report.change > 0 %}<strong>up {{ report.change|floatformat:"0" }} points</strong>
+      {% elif report.change < 0 %}<strong>down {{ report.change|cut:"-"|floatformat:"0" }} points</strong>
+      {% else %}<strong>unchanged</strong>{% endif %}.</p>
+  {% elif p.attempts %}
+    <p class="muted">Last week you completed {{ p.attempts }} attempt{{ p.attempts|pluralize }}.</p>
+  {% endif %}
+  {% endwith %}
+  {% if not report.summary.attempts %}
+    <div class="alert warning">You did not finish any practice session or assessment this week.</div>
+  {% endif %}
+</div>
+
+{% if report.attempts %}
+<div class="card">
+  <h2>What you completed</h2>
+  <ul class="plain">
+    {% for a in report.attempts %}
+      <li>{{ a.title }} <span class="muted">({{ a.when|date:"D j M, g:i a" }})</span>
+        {% if a.is_assessment %}: score {{ a.score|floatformat:"-1" }}{% if a.timed_out %}, time limit reached{% endif %}{% endif %}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+{% if report.topics %}
+<div class="card">
+  <h2>Topics this week</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Topic</th><th>Accuracy</th><th>Scored answers</th><th>Level</th></tr></thead>
+    <tbody>
+    {% for t in report.topics %}
+      <tr><td>{{ t.topic.subject }} / {{ t.topic.name }}</td>
+          <td>{% if t.accuracy is not None %}{{ t.accuracy|floatformat:"0" }}%{% else %}-{% endif %}</td>
+          <td>{{ t.auto }}</td><td><span class="tag level-{{ t.level_key }}">{{ t.level_label }}</span></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if report.needs_work %}
+    <p><strong>Focus next week on:</strong>
+      {% for t in report.needs_work %}<span class="tag">{{ t.topic.name }}</span> {% endfor %}</p>
+  {% endif %}
+  {% if report.doing_well %}
+    <p><strong>Going well:</strong>
+      {% for t in report.doing_well %}<span class="tag">{{ t.topic.name }}</span> {% endfor %}</p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

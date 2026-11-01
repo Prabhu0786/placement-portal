@@ -1,0 +1,74 @@
+{% extends "accounts/base.html" %}
+{% block title %}Reports - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Student progress reports</h1>
+  <a class="btn secondary" href="{% url 'report_export' %}">Download CSV</a>
+</div>
+<div class="alert warning" role="status">
+  Privacy: only students who have <strong>given consent</strong> are included.
+  {{ report.consenting_count }} of {{ report.total_students }} student{{ report.total_students|pluralize }} have consented.
+  Figures for everyone else are not shown.
+</div>
+
+<div class="stats">
+  <div class="stat"><strong>{{ report.consenting_count }}</strong>Students included</div>
+  <div class="stat"><strong>{{ report.active_this_week }}</strong>Active this week</div>
+  <div class="stat"><strong>{% if report.average_accuracy is not None %}{{ report.average_accuracy|floatformat:"0" }}%{% else %}-{% endif %}</strong>Average accuracy</div>
+  <div class="stat"><strong>{{ report.answered_total }}</strong>Questions answered</div>
+</div>
+<p class="muted">Average accuracy is the mean of each included student's own accuracy.</p>
+
+<div class="card">
+  <h2>Weakest topics across the group</h2>
+  {% if report.topic_table %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Topic</th><th>Average accuracy</th><th>Students</th></tr></thead>
+    <tbody>
+    {% for t in report.topic_table %}
+      <tr><td>{{ t.topic.subject }} / {{ t.topic.name }}</td><td>{{ t.average|floatformat:"0" }}%</td><td>{{ t.students }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p class="muted">No finished attempts from consenting students yet.</p>{% endif %}
+</div>
+
+<div class="card">
+  <h2>Students</h2>
+  {% if report.rows %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Student</th><th>Attempts</th><th>Answered</th><th>Accuracy</th><th>This week</th><th>Weakest topic</th><th>Last active</th><th></th></tr></thead>
+    <tbody>
+    {% for row in report.rows %}
+      <tr>
+        <td>{{ row.user.get_full_name|default:row.user.username }}</td>
+        <td>{{ row.summary.attempts }}</td>
+        <td>{{ row.summary.answered }}</td>
+        <td>{% if row.summary.accuracy is not None %}{{ row.summary.accuracy|floatformat:"0" }}%{% else %}-{% endif %}</td>
+        <td>{{ row.week.attempts }} attempt{{ row.week.attempts|pluralize }}</td>
+        <td>{{ row.weakest.name|default:"-" }}</td>
+        <td>{% if row.last_active %}{{ row.last_active|date:"j M Y" }}{% else %}Never{% endif %}</td>
+        <td><a class="btn secondary small" href="{% url 'report_student' row.user.pk %}">Details</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p class="muted">No students have given consent yet.</p>{% endif %}
+</div>
+
+{% if report.inactive %}
+<div class="card">
+  <h2>Not active for {{ report.inactive_days }} days or more</h2>
+  <ul class="plain">
+    {% for row in report.inactive %}
+      <li>{{ row.user.get_full_name|default:row.user.username }}
+        <span class="muted">{% if row.last_active %}(last active {{ row.last_active|date:"j M Y" }}){% else %}(no finished attempts){% endif %}</span></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% endblock %}

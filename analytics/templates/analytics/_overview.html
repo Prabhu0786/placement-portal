@@ -1,0 +1,93 @@
+{# Shared by the student's Progress page and the TPO's individual report. #}
+{% with s=overview.summary r=overview.readiness chart=overview.chart %}
+<div class="stats">
+  <div class="stat"><strong>{{ s.attempts }}</strong>Attempts completed</div>
+  <div class="stat"><strong>{{ s.answered }}</strong>Questions answered</div>
+  <div class="stat"><strong>{% if s.accuracy is not None %}{{ s.accuracy|floatformat:"0" }}%{% else %}-{% endif %}</strong>Accuracy</div>
+  <div class="stat"><strong>{{ s.minutes }}</strong>Minutes of practice</div>
+</div>
+
+<div class="card">
+  <h2>Preparation indicator: {{ r.label }}</h2>
+  <div class="stats">
+    <div class="stat"><strong>{% if r.accuracy is not None %}{{ r.accuracy|floatformat:"0" }}%{% else %}-{% endif %}</strong>Accuracy</div>
+    <div class="stat"><strong>{{ r.coverage }}%</strong>Topic coverage ({{ r.covered }} of {{ r.available }})</div>
+    <div class="stat"><strong>{{ r.consistency }} of 4</strong>Recent weeks practised</div>
+  </div>
+  <details>
+    <summary>How this is calculated</summary>
+    <ul>
+      <li><strong>Accuracy</strong>: correct answers divided by multiple-choice questions you were given. Unanswered ones count as wrong. Open questions (coding, interview) are not scored.</li>
+      <li><strong>Topic coverage</strong>: topics where you have answered at least 3 multiple-choice questions, out of all topics that have practice questions.</li>
+      <li><strong>Recent weeks practised</strong>: how many of the last 4 weeks (including this one) you finished at least one practice session or assessment.</li>
+      <li><strong>Getting started</strong> until you have 10 scored answers. After that: <strong>Strong</strong> needs accuracy of 75% or more and coverage of 60% or more. <strong>Developing</strong> needs 50% and 30%. Otherwise <strong>Needs more practice</strong>.</li>
+    </ul>
+    <p class="muted">This describes your practice so far. It is not a prediction of placement results.</p>
+  </details>
+</div>
+{% endwith %}
+
+<div class="card">
+  <h2>Weekly accuracy, last 8 weeks</h2>
+  {% with chart=overview.chart %}
+  {% if chart.has_data %}
+    <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="Line chart of weekly accuracy for the last 8 weeks. The table below has the same numbers." style="width: 100%; height: auto; max-width: 640px;">
+      {% for g in chart.grid %}
+        <line x1="{{ chart.left }}" x2="{{ chart.right }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="#d5dbe5" stroke-width="1"/>
+        <text x="{{ chart.text_x }}" y="{{ g.y }}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="#5a6675">{{ g.text }}</text>
+      {% endfor %}
+      <polyline points="{{ chart.points }}" fill="none" stroke="#2a6fdb" stroke-width="2.5"/>
+      {% for d in chart.dots %}
+        <circle cx="{{ d.x }}" cy="{{ d.y }}" r="4.5" fill="#2a6fdb"><title>Week of {{ d.label }}: {{ d.value }}%</title></circle>
+      {% endfor %}
+      {% for l in chart.labels %}
+        <text x="{{ l.x }}" y="{{ chart.label_y }}" text-anchor="middle" font-size="11" fill="#5a6675">{{ l.text }}</text>
+      {% endfor %}
+    </svg>
+  {% else %}
+    <p class="muted">The chart appears after the first finished practice session or assessment.</p>
+  {% endif %}
+  {% endwith %}
+  <div class="table-wrap">
+  <table>
+    <caption class="muted" style="text-align: left;">Week beginning (Monday)</caption>
+    <thead><tr><th>Week</th><th>Attempts</th><th>Questions answered</th><th>Accuracy</th><th>Minutes</th></tr></thead>
+    <tbody>
+    {% for w in overview.series reversed %}
+      <tr><td>{{ w.label }}</td><td>{{ w.attempts }}</td><td>{{ w.answered }}</td>
+          <td>{% if w.accuracy is not None %}{{ w.accuracy|floatformat:"0" }}%{% else %}-{% endif %}</td><td>{{ w.minutes }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>By topic (weakest first)</h2>
+  {% if overview.topics %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Topic</th><th>Accuracy</th><th>Level</th><th>Answers</th><th>Minutes</th>{% if show_practice %}<th></th>{% endif %}</tr></thead>
+    <tbody>
+    {% for t in overview.topics %}
+      <tr>
+        <td>{{ t.topic.subject }} / {{ t.topic.name }}</td>
+        <td style="min-width: 130px;">
+          {% if t.accuracy is not None %}
+            {{ t.accuracy|floatformat:"0" }}%
+            <div class="progress bar-{{ t.level_key }}" role="progressbar" aria-valuenow="{{ t.accuracy|floatformat:'0' }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ t.accuracy|floatformat:'0' }}%"></span></div>
+          {% else %}-{% endif %}
+        </td>
+        <td><span class="tag level-{{ t.level_key }}">{{ t.level_label }}</span></td>
+        <td>{{ t.auto }} scored</td>
+        <td>{{ t.minutes }}</td>
+        {% if show_practice %}<td><a class="btn secondary small" href="{% url 'practice_home' %}?topic={{ t.topic.pk }}">Practise</a></td>{% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+    <p class="muted">No topic data yet.</p>
+  {% endif %}
+</div>

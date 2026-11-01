@@ -36,7 +36,8 @@ def _home_context(request, form):
 
 @role_required("Student")
 def practice_home(request):
-    return render(request, "assessments/practice_home.html", _home_context(request, PracticeSetupForm()))
+    form = PracticeSetupForm(initial={"topic": request.GET.get("topic") or None})
+    return render(request, "assessments/practice_home.html", _home_context(request, form))
 
 
 @role_required("Student")

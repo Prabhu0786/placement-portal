@@ -1,0 +1,14 @@
+{% extends "accounts/base.html" %}
+{% block title %}Report: {{ student.get_full_name|default:student.username }}{% endblock %}
+{% block content %}
+<p><a href="{% url 'reports_home' %}">&larr; All students</a></p>
+<h1>{{ student.get_full_name|default:student.username }}</h1>
+{% if consent %}
+  {% include "analytics/_overview.html" %}
+{% else %}
+  <div class="card">
+    <h2>No consent given</h2>
+    <p>This student has not agreed to share their performance data, so no figures are shown.</p>
+  </div>
+{% endif %}
+{% endblock %}
