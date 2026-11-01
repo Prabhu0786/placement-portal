@@ -4,6 +4,29 @@
 <h1>Welcome, {{ user.get_full_name|default:user.username }}</h1>
 
 {% if user.is_student %}
+  {% if reminders %}
+  <div class="card">
+    <h2>Reminders</h2>
+    <ul class="plain">
+      {% for item in reminders %}
+        <li>{{ item.text }} <a href="{% url 'plan' %}">Open plan</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if top_recommendations %}
+  <div class="card">
+    <h2>Recommended next</h2>
+    <ul class="plain">
+      {% for rec in top_recommendations %}
+        <li><strong>{{ rec.topic.name }}</strong>: {{ rec.reason }}</li>
+      {% endfor %}
+    </ul>
+    <p><a class="btn secondary" href="{% url 'recommendations' %}">See all recommendations</a></p>
+  </div>
+  {% endif %}
+
   <div class="card">
     <h2>Your profile is {{ completeness }}% complete</h2>
     <div class="progress" role="progressbar" aria-valuenow="{{ completeness }}" aria-valuemin="0" aria-valuemax="100">
@@ -23,7 +46,7 @@
     <div class="card"><h2>Practice</h2><p class="muted">Topic-wise coding, aptitude, verbal and technical questions with feedback.</p><p><a class="btn secondary" href="{% url 'practice_home' %}">Start practising</a></p></div>
     <div class="card"><h2>Timed assessments</h2><p class="muted">Mock tests with a countdown, automatic saving and detailed feedback.</p><p><a class="btn secondary" href="{% url 'assessment_list' %}">View assessments</a></p></div>
     <div class="card"><h2>Progress</h2><p class="muted">Accuracy, time, trends by topic and your weekly report.</p><p><a class="btn secondary" href="{% url 'progress' %}">View my progress</a></p></div>
-    <div class="card"><h2>Weekly plan</h2><p class="muted">Recommendations and weekly goals. <span class="tag">Coming in the next phase</span></p></div>
+    <div class="card"><h2>Weekly plan</h2><p class="muted">Set weekly goals and track them automatically.</p><p><a class="btn secondary" href="{% url 'plan' %}">Open my plan</a></p></div>
   </div>
 
 {% elif user.role_name %}

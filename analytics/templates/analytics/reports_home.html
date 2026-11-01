@@ -20,6 +20,18 @@
 <p class="muted">Average accuracy is the mean of each included student's own accuracy.</p>
 
 <div class="card">
+  <h2>Weekly goals due this week</h2>
+  {% if report.goals.total %}
+    <p>{{ report.goals.total }} goal{{ report.goals.total|pluralize }} set by included students:
+      <strong>{{ report.goals.completed }}</strong> completed,
+      <strong>{{ report.goals.open }}</strong> still open,
+      <strong>{{ report.goals.missed }}</strong> missed.</p>
+  {% else %}
+    <p class="muted">No included student has a goal due this week.</p>
+  {% endif %}
+</div>
+
+<div class="card">
   <h2>Weakest topics across the group</h2>
   {% if report.topic_table %}
   <div class="table-wrap">

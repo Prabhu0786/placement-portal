@@ -1,0 +1,40 @@
+{% extends "accounts/base.html" %}
+{% block title %}Recommended for you - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Recommended for you</h1>
+  <a class="btn secondary" href="{% url 'plan' %}">My weekly plan</a>
+</div>
+
+{% if starting %}
+  <div class="alert warning" role="status">
+    These are <strong>general starting suggestions</strong>, because you have fewer than {{ threshold }} scored answers so far.
+    After a few practice sessions, they will be based on your own results.
+  </div>
+{% endif %}
+
+{% if items %}
+  {% for item in items %}
+    <div class="card">
+      <div class="row">
+        <div>
+          <h2 style="margin-bottom: 4px;"><span class="tag">Priority {{ item.priority }}</span> {{ item.topic.subject }} / {{ item.topic.name }}</h2>
+          <p style="margin: 6px 0;"><strong>Why:</strong> {{ item.reason }}</p>
+        </div>
+      </div>
+      <p>
+        <a class="btn" href="{% url 'practice_home' %}?topic={{ item.topic.pk }}">Practise this topic</a>
+        <a class="btn secondary" href="{% url 'resource_list' %}?topic={{ item.topic.pk }}">Study resources</a>
+        <a class="btn secondary" href="{% url 'goal_create' %}?topic={{ item.topic.pk }}">Add to my plan</a>
+      </p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <h2>No suggestions right now</h2>
+    <p class="muted">Either you are doing well in every topic you have practised, or no practice questions have been published yet. Try a timed assessment to keep your skills sharp.</p>
+    <p><a class="btn" href="{% url 'assessment_list' %}">Timed assessments</a></p>
+  </div>
+{% endif %}
+<p class="muted">Suggestions use only your own finished practice sessions and assessments, and are refreshed after each one.</p>
+{% endblock %}

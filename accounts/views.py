@@ -57,10 +57,14 @@ def dashboard(request):
             ),
         ]
         done = sum(1 for _, ok in checklist if ok)
+        from planning import services as planning  # local import avoids a circular import
+
         context.update(
             profile=profile,
             checklist=checklist,
             completeness=round(100 * done / len(checklist)),
+            reminders=planning.reminders(request.user),
+            top_recommendations=planning.current_recommendations(request.user)[:3],
         )
     return render(request, "accounts/dashboard.html", context)
 

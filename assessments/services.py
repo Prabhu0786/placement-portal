@@ -129,6 +129,8 @@ def finish_attempt(attempt, answers=None):
         attempt.save(update_fields=["score"])
         attempt.change_status(Attempt.Status.EVALUATED)
         recalculate_metrics(attempt.user, attempt.submitted_at)
+        from planning import services as planning  # imported here to avoid a circular import
+        planning.after_attempt(attempt.user)
     return attempt
 
 

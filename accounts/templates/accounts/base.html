@@ -43,7 +43,7 @@
     label { display: block; font-weight: 600; margin-bottom: 4px; }
     label.checkbox { font-weight: 400; display: flex; gap: 8px; align-items: flex-start; }
     input[type=text], input[type=password], input[type=email], input[type=number],
-    input[type=url], select, textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--border);
+    input[type=url], input[type=date], select, textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--border);
       border-radius: 6px; font: inherit; background: #fff; color: var(--text); }
     .help { color: var(--muted); font-size: .85rem; margin-top: 4px; }
     .help ul { margin: 4px 0 0; padding-left: 18px; }
@@ -75,6 +75,11 @@
     .status-pending_review { background: #fff0c2; color: #6b4e00; }
     .status-draft { background: #e6eaf2; color: #1d3557; }
     .status-archived { background: #eee; color: #555; }
+    .status-planned { background: #e6eaf2; color: #1d3557; }
+    .status-in_progress { background: #dbe8ff; color: #1b3f8f; }
+    .status-rescheduled { background: #fff0c2; color: #6b4e00; }
+    .status-missed { background: #fde2e0; color: #7a1710; }
+    .status-completed { background: #d9f2e4; color: #14532d; }
     .result-correct { background: #d9f2e4; color: #14532d; }
     .result-incorrect { background: #fde2e0; color: #7a1710; }
     .result-manual { background: #e6eaf2; color: #1d3557; }
@@ -113,7 +118,7 @@
       <nav aria-label="Main">
         {% if user.is_authenticated %}
           <a href="{% url 'dashboard' %}">Dashboard</a>
-          {% if user.is_student %}<a href="{% url 'practice_home' %}">Practice</a><a href="{% url 'assessment_list' %}">Assessments</a><a href="{% url 'progress' %}">Progress</a>{% endif %}
+          {% if user.is_student %}<a href="{% url 'practice_home' %}">Practice</a><a href="{% url 'assessment_list' %}">Assessments</a><a href="{% url 'progress' %}">Progress</a><a href="{% url 'plan' %}">Plan</a><a href="{% url 'recommendations' %}">Recommended</a>{% endif %}
           {% if user.is_tpo %}<a href="{% url 'reports_home' %}">Reports</a>{% endif %}
           <a href="{% url 'resource_list' %}">Resources</a>
           <a href="{% url 'company_list' %}">Companies</a>

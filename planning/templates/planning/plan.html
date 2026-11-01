@@ -1,0 +1,87 @@
+{% extends "accounts/base.html" %}
+{% block title %}My weekly plan - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>My weekly plan</h1>
+  <span>
+    <a class="btn" href="{% url 'goal_create' %}">Add a goal</a>
+    <a class="btn secondary" href="{% url 'recommendations' %}">Recommendations</a>
+  </span>
+</div>
+<p class="muted">Progress is counted automatically from the questions you answer in practice sessions and assessments.</p>
+
+<div class="card">
+  <h2>Open goals</h2>
+  {% if active %}
+    {% for g in active %}
+      <div style="padding: 12px 0; border-bottom: 1px solid var(--border);">
+        <div class="row">
+          <div>
+            <strong>{{ g.topic.subject }} / {{ g.topic.name }}</strong>
+            <span class="tag status-{{ g.status }}">{{ g.get_status_display }}</span>
+            <div class="muted">Due {{ g.due_date|date:"D j M" }}
+              {% if g.days_left == 0 %}(today){% elif g.days_left == 1 %}(tomorrow){% else %}({{ g.days_left }} days left){% endif %}</div>
+          </div>
+          <div class="actions">
+            {% for to, label in g.actions %}
+              <form class="inline" method="post" action="{% url 'goal_status' g.pk %}">{% csrf_token %}
+                <input type="hidden" name="to" value="{{ to }}"><button class="btn small" type="submit">{{ label }}</button>
+              </form>
+            {% endfor %}
+            <a class="btn secondary small" href="{% url 'practice_home' %}?topic={{ g.topic.pk }}">Practise</a>
+          </div>
+        </div>
+        <p style="margin: 8px 0 4px;">{{ g.progress }} of {{ g.target }} questions answered</p>
+        <div class="progress" role="progressbar" aria-valuenow="{{ g.percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ g.percent }}%"></span></div>
+        <details>
+          <summary>Reschedule or remove</summary>
+          <form method="post" action="{% url 'goal_reschedule' g.pk %}" class="row" style="justify-content: flex-start; margin-top: 8px;">{% csrf_token %}
+            <label for="due-{{ g.pk }}" style="margin: 0;">New due date</label>
+            <input type="date" id="due-{{ g.pk }}" name="due_date" required style="width: auto;">
+            <button class="btn secondary small" type="submit">Reschedule</button>
+          </form>
+          <form method="post" action="{% url 'goal_delete' g.pk %}" style="margin-top: 8px;" onsubmit="return confirm('Remove this goal?');">{% csrf_token %}
+            <button class="btn danger small" type="submit">Remove goal</button>
+          </form>
+        </details>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="muted">No open goals. Add one, or pick a topic from your <a href="{% url 'recommendations' %}">recommendations</a>.</p>
+  {% endif %}
+</div>
+
+{% if missed %}
+<div class="card">
+  <h2>Missed goals</h2>
+  <p class="muted">The due date passed before the target was reached. You can give yourself a new date.</p>
+  <ul class="plain">
+    {% for g in missed %}
+      <li>
+        <div class="row">
+          <div><strong>{{ g.topic.name }}</strong> <span class="tag status-missed">Missed</span>
+            <div class="muted">Was due {{ g.due_date|date:"j M" }}: {{ g.progress }} of {{ g.target }} questions</div></div>
+          <form method="post" action="{% url 'goal_reschedule' g.pk %}" class="row" style="justify-content: flex-start;">{% csrf_token %}
+            <label for="due-{{ g.pk }}" class="muted" style="margin: 0; font-weight: 400;">New date</label>
+            <input type="date" id="due-{{ g.pk }}" name="due_date" required style="width: auto;">
+            <button class="btn secondary small" type="submit">Reschedule</button>
+          </form>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+{% if completed %}
+<div class="card">
+  <h2>Completed</h2>
+  <ul class="plain">
+    {% for g in completed %}
+      <li>{{ g.topic.subject }} / {{ g.topic.name }} <span class="tag status-published">Completed</span>
+        <span class="muted">due {{ g.due_date|date:"j M" }}, {{ g.progress }} questions</span></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% endblock %}

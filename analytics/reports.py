@@ -1,12 +1,13 @@
 """TPO reports. Privacy (BR-10, BR-14): only students who gave consent are included,
 and everything is read-only. Exact access rules still need validating with the TPO."""
 import csv
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import timedelta
 
 from django.utils import timezone
 
 from accounts.models import StudentProfile, User
+from planning.models import WeeklyGoal
 
 from . import services
 
@@ -56,7 +57,20 @@ def cohort_report(now=None):
         for topic, scores in topic_scores.items()
     ]
     topic_table.sort(key=lambda r: (r["average"], r["topic"].name))
+    week_goals = Counter(
+        WeeklyGoal.objects.filter(
+            user_id__in=consenting_ids,
+            due_date__gte=current_week,
+            due_date__lte=current_week + timedelta(days=6),
+        ).values_list("status", flat=True)
+    )
     return {
+        "goals": {
+            "total": sum(week_goals.values()),
+            "completed": week_goals["completed"],
+            "open": week_goals["planned"] + week_goals["in_progress"] + week_goals["rescheduled"],
+            "missed": week_goals["missed"],
+        },
         "total_students": students.count(),
         "consenting_count": len(users),
         "rows": rows,
