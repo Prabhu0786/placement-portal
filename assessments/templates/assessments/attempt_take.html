@@ -1,0 +1,118 @@
+{% extends "accounts/base.html" %}
+{% block title %}{{ assessment.title }} - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="timer-bar">
+  <strong>{{ assessment.title }}</strong>
+  <span class="timer" id="timer" role="timer" aria-label="Time remaining">--:--</span>
+</div>
+<p id="save-status" class="muted" role="status" aria-live="polite">Your answers are saved automatically.</p>
+<div id="time-alert" class="alert warning" role="alert" hidden></div>
+<noscript><div class="alert warning">JavaScript is off, so the countdown and automatic saving will not work. Your answers are sent when you press Submit, and the server still enforces the time limit.</div></noscript>
+
+<form id="exam-form" method="post" action="{% url 'attempt_submit' attempt.pk %}">
+  {% csrf_token %}
+  {% for row in rows %}
+    <div class="card">
+      <fieldset style="border: 0; padding: 0; margin: 0;">
+        <legend style="padding: 0; margin-bottom: 6px;">
+          <strong>Question {{ row.number }}</strong>
+          <span class="tag">{{ row.marks }} mark{{ row.marks|pluralize }}</span>
+          <span class="tag">{{ row.response.question.topic.name }}</span>
+        </legend>
+        <p>{{ row.response.question.text|linebreaksbr }}</p>
+        {% for option in row.response.question.options %}
+          <div class="field" style="margin-bottom: 6px;">
+            <label class="checkbox"><input type="radio" name="q_{{ row.response.question_id }}" value="{{ option }}"{% if option == row.response.answer %} checked{% endif %}> <span>{{ option }}</span></label>
+          </div>
+        {% endfor %}
+      </fieldset>
+    </div>
+  {% endfor %}
+  <p>
+    <button class="btn" type="submit" id="submit-btn"
+            onclick="return confirm('Submit your assessment? You cannot change your answers afterwards.');">Submit assessment</button>
+  </p>
+</form>
+
+<script>
+(function () {
+  var remaining = {{ remaining }};
+  var loadedAt = performance.now();
+  var form = document.getElementById("exam-form");
+  var timerEl = document.getElementById("timer");
+  var statusEl = document.getElementById("save-status");
+  var alertEl = document.getElementById("time-alert");
+  var saveUrl = "{% url 'attempt_save' attempt.pk %}";
+  var token = form.querySelector("[name=csrfmiddlewaretoken]").value;
+  var submitted = false, flushing = false, warned5 = false, warned1 = false;
+  var pending = {};
+
+  function secondsLeft() {
+    return Math.max(0, remaining - Math.floor((performance.now() - loadedAt) / 1000));
+  }
+  function format(total) {
+    var m = Math.floor(total / 60), s = total % 60;
+    return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+  }
+  function announce(message) { alertEl.textContent = message; alertEl.hidden = false; }
+  function submitNow() {
+    if (submitted) { return; }
+    submitted = true;
+    form.submit();
+  }
+  function tick() {
+    var left = secondsLeft();
+    timerEl.textContent = format(left);
+    if (left <= 60) { timerEl.classList.add("urgent"); }
+    if (left <= 300 && !warned5 && left > 60) { warned5 = true; announce("5 minutes remaining."); }
+    if (left <= 60 && left > 0 && !warned1) { warned1 = true; announce("1 minute remaining."); }
+    if (left <= 0) { announce("Time is up. Submitting your saved answers..."); submitNow(); }
+  }
+
+  function flush() {
+    if (flushing) { return; }
+    var ids = Object.keys(pending);
+    if (!ids.length) { return; }
+    flushing = true;
+    var failed = false;
+    var qid = ids[0], answer = pending[qid];
+    statusEl.textContent = "Saving...";
+    fetch(saveUrl, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {"X-CSRFToken": token, "Content-Type": "application/x-www-form-urlencoded"},
+      body: "question_id=" + encodeURIComponent(qid) + "&answer=" + encodeURIComponent(answer)
+    }).then(function (response) {
+      if (response.status === 409) {
+        return response.json().then(function (data) { submitted = true; window.location = data.redirect; });
+      }
+      if (!response.ok) { throw new Error("save failed"); }
+      return response.json().then(function (data) {
+        if (pending[qid] === answer) { delete pending[qid]; }
+        remaining = data.remaining;
+        loadedAt = performance.now();
+        statusEl.textContent = Object.keys(pending).length ? "Saving..." : "All answers saved.";
+      });
+    }).catch(function () {
+      failed = true;
+      statusEl.textContent = "Not saved yet (connection problem). Retrying automatically...";
+    }).then(function () {
+      flushing = false;
+      if (Object.keys(pending).length) { setTimeout(flush, failed ? 4000 : 0); }
+    });
+  }
+
+  form.addEventListener("change", function (event) {
+    var field = event.target;
+    if (field && field.name && field.name.indexOf("q_") === 0) {
+      pending[field.name.substring(2)] = field.value;
+      flush();
+    }
+  });
+  form.addEventListener("submit", function () { submitted = true; });
+
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
+{% endblock %}

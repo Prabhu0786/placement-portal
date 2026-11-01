@@ -1,0 +1,55 @@
+{% extends "accounts/base.html" %}
+{% block title %}Manage assessments - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Assessments</h1>
+  <a class="btn" href="{% url 'assessment_create' %}">Create an assessment</a>
+</div>
+<p><a href="{% url 'manage_home' %}">&larr; Manage content</a></p>
+<div class="card">
+  <form method="get" class="filters">
+    <div class="field">
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        <option value="">All</option>
+        {% for value, label in statuses %}<option value="{{ value }}"{% if value == status %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><button class="btn" type="submit">Filter</button></div>
+  </form>
+</div>
+<div class="card">
+  {% if page.object_list %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Title</th><th>Type</th><th>Duration</th><th>Questions</th><th>Status</th><th>Added by</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for a in page.object_list %}
+      <tr>
+        <td>{{ a.title }}</td>
+        <td>{{ a.get_type_display }}</td>
+        <td>{{ a.duration }} min</td>
+        <td>{{ a.question_total }}</td>
+        <td><span class="tag status-{{ a.status }}">{{ a.get_status_display }}</span></td>
+        <td>{{ a.created_by|default:"-" }}</td>
+        <td>
+          <div class="actions">
+            {% if a.editable %}<a class="btn secondary small" href="{% url 'assessment_edit' a.pk %}">Edit</a>{% endif %}
+            {% for to, label in a.actions %}
+              <form class="inline" method="post" action="{% url 'assessment_transition' a.pk %}">{% csrf_token %}
+                <input type="hidden" name="to" value="{{ to }}"><button class="btn small" type="submit">{{ label }}</button>
+              </form>
+            {% endfor %}
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% include "content/_pager.html" %}
+  {% else %}
+    <p class="muted">No assessments yet. Publish some multiple-choice questions first, then create one.</p>
+  {% endif %}
+</div>
+{% endblock %}

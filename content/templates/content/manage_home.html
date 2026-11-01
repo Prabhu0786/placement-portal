@@ -13,6 +13,7 @@
 <div class="grid">
   <div class="card"><h2>Resources</h2><p class="muted">Study materials students can browse.</p><a class="btn" href="{% url 'manage_resources' %}">Manage resources</a></div>
   <div class="card"><h2>Questions</h2><p class="muted">Practice questions: multiple choice and open.</p><a class="btn" href="{% url 'manage_questions' %}">Manage questions</a></div>
+  <div class="card"><h2>Assessments</h2><p class="muted">Timed mock tests built from published questions.</p><a class="btn" href="{% url 'manage_assessments' %}">Manage assessments</a></div>
   {% if user.is_tpo %}
   <div class="card"><h2>Companies</h2><p class="muted">Eligibility, stages, source and updated date.</p><a class="btn" href="{% url 'manage_companies' %}">Manage companies</a></div>
   {% endif %}

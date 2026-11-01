@@ -2,7 +2,7 @@
 from django.db import transaction
 from django.utils import timezone
 
-from .evaluation import evaluate
+from . import services
 from .models import Attempt, Response
 
 
@@ -24,34 +24,12 @@ def submit_practice(attempt, answers):
     """
     if attempt.status != Attempt.Status.IN_PROGRESS:
         return False
-    with transaction.atomic():
-        now = timezone.now()
-        responses = list(attempt.responses.select_related("question"))
-        elapsed = max(0, int((now - attempt.started_at).total_seconds())) if attempt.started_at else 0
-        # Time is measured for the whole session, so each question gets an equal share.
-        share = elapsed // len(responses) if responses else 0
-
-        attempt.submitted_at = now
-        attempt.save(update_fields=["submitted_at"])
-        attempt.change_status(Attempt.Status.SUBMITTED)
-
-        total = 0.0
-        for response in responses:
-            response.answer = (answers.get(response.question_id) or "").strip()
-            response.is_correct, response.marks_awarded = evaluate(response.question, response.answer)
-            response.time_taken_seconds = share
-            total += response.marks_awarded
-        Response.objects.bulk_update(
-            responses, ["answer", "is_correct", "marks_awarded", "time_taken_seconds"]
-        )
-        attempt.score = total
-        attempt.save(update_fields=["score"])
-        attempt.change_status(Attempt.Status.EVALUATED)
+    services.finish_attempt(attempt, answers)
     return True
 
 
 def summarise(responses):
-    """Numbers and weak topics for the result page."""
+    """Numbers and weak topics for the practice result page."""
     auto = [r for r in responses if r.is_correct is not None]
     correct = sum(1 for r in auto if r.is_correct)
     weak = []

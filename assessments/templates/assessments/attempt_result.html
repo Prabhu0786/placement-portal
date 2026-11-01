@@ -1,0 +1,50 @@
+{% extends "accounts/base.html" %}
+{% block title %}Feedback - {{ assessment.title }}{% endblock %}
+{% block content %}
+<h1>{{ assessment.title }}: your feedback</h1>
+<div class="card">
+  <h2>{{ summary.score|floatformat:"-1" }} of {{ summary.max_marks }} marks{% if summary.percent is not None %} ({{ summary.percent }}%){% endif %}</h2>
+  {% if summary.percent is not None %}
+    <div class="progress" role="progressbar" aria-valuenow="{{ summary.percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ summary.percent }}%"></span></div>
+  {% endif %}
+  <p>
+    {{ summary.correct }} of {{ summary.scored_count }} correct
+    {% if summary.unanswered %}&middot; {{ summary.unanswered }} unanswered{% endif %}
+    {% if summary.minutes_used is not None %}&middot; time used {{ summary.minutes_used }} min {{ summary.seconds_used }} s{% endif %}
+  </p>
+  {% if attempt.timed_out %}
+    <div class="alert warning">The time limit was reached, so this attempt was scored from the answers saved before time ran out.</div>
+  {% endif %}
+  {% if summary.weak_topics %}
+    <p><strong>Topics to revisit:</strong>
+      {% for t in summary.weak_topics %}<span class="tag">{{ t.subject }} / {{ t.name }}</span> {% endfor %}
+    </p>
+    <p><a class="btn secondary" href="{% url 'resource_list' %}">Browse resources</a>
+       <a class="btn secondary" href="{% url 'practice_home' %}">Practise these topics</a></p>
+  {% endif %}
+</div>
+
+{% for row in rows %}
+  {% with r=row.response %}
+  <div class="card">
+    <div class="row">
+      <strong>Question {{ row.number }}</strong>
+      <span>
+        {% if r.is_correct is None %}<span class="tag result-manual">Not auto-checked</span>
+        {% elif r.is_correct %}<span class="tag result-correct">Correct: {{ r.marks_awarded|floatformat:"-1" }} / {{ row.marks }}</span>
+        {% else %}<span class="tag result-incorrect">Incorrect: 0 / {{ row.marks }}</span>{% endif %}
+      </span>
+    </div>
+    <p><span class="tag">{{ r.question.get_type_display }}</span> <span class="tag">{{ r.question.topic.name }}</span></p>
+    <p>{{ r.question.text|linebreaksbr }}</p>
+    <dl>
+      <dt>Your answer</dt>
+      <dd>{% if r.answer %}{{ r.answer|linebreaksbr }}{% else %}<span class="muted">Not answered</span>{% endif %}</dd>
+      {% if r.question.answer %}<dt>Correct answer</dt><dd>{{ r.question.answer|linebreaksbr }}</dd>{% endif %}
+      {% if r.question.explanation %}<dt>Explanation</dt><dd>{{ r.question.explanation|linebreaksbr }}</dd>{% endif %}
+    </dl>
+  </div>
+  {% endwith %}
+{% endfor %}
+<p><a class="btn" href="{% url 'assessment_list' %}">Back to assessments</a></p>
+{% endblock %}

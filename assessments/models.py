@@ -84,6 +84,8 @@ class Attempt(models.Model):
     expires_at = models.DateTimeField(null=True, blank=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
     score = models.FloatField(null=True, blank=True)
+    # True when the time limit ended the attempt (BR-6). Kept because the status moves on to Evaluated.
+    timed_out = models.BooleanField(default=False)
 
     def change_status(self, new_status):
         """Move to a new state, refusing any transition the state diagram does not allow."""

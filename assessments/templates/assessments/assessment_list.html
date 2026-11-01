@@ -1,0 +1,57 @@
+{% extends "accounts/base.html" %}
+{% block title %}Timed assessments - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Timed assessments</h1>
+<p class="muted">Mock tests with a time limit. Your answers are saved as you go, and the timer is controlled by the server.</p>
+
+{% if rows %}
+  <div class="grid">
+    {% for row in rows %}
+      <div class="card">
+        <h2>{{ row.assessment.title }}</h2>
+        <p>
+          <span class="tag">{{ row.assessment.get_type_display }}</span>
+          <span class="tag">{{ row.assessment.duration }} minutes</span>
+          <span class="tag">{{ row.assessment.question_count }} question{{ row.assessment.question_count|pluralize }}</span>
+        </p>
+        {% if row.attempts %}<p class="muted">You have attempted this {{ row.attempts }} time{{ row.attempts|pluralize }}.</p>{% endif %}
+        {% if row.active %}
+          <p><a class="btn" href="{% url 'attempt_take' row.active.pk %}">Resume your attempt</a></p>
+        {% else %}
+          <form method="post" action="{% url 'assessment_start' row.assessment.pk %}"
+                onsubmit="return confirm('Start now? The timer ({{ row.assessment.duration }} minutes) begins immediately and cannot be paused.');">
+            {% csrf_token %}
+            <button class="btn" type="submit">{% if row.attempts %}Retake{% else %}Start{% endif %} assessment</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card"><p class="muted">No assessments are available yet. Your placement coordinator will publish them here.</p></div>
+{% endif %}
+
+<div class="card">
+  <h2>Your results</h2>
+  {% if history %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Assessment</th><th>Finished</th><th>Score</th><th>How it ended</th><th></th></tr></thead>
+    <tbody>
+    {% for a in history %}
+      <tr>
+        <td>{{ a.assessment.title }}</td>
+        <td>{{ a.submitted_at|date:"j M Y, g:i a" }}</td>
+        <td>{{ a.score|floatformat:"0" }}</td>
+        <td>{% if a.timed_out %}Time limit reached{% else %}Submitted{% endif %}</td>
+        <td><a class="btn secondary small" href="{% url 'attempt_result' a.pk %}">View feedback</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+    <p class="muted">No finished attempts yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

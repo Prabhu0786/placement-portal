@@ -3,6 +3,7 @@
 {% block content %}
 <div class="card narrow">
   <h1>{{ title }}</h1>
+  {% if note %}<div class="alert warning" role="status">{{ note }}</div>{% endif %}
   <form method="post" novalidate>
     {% csrf_token %}
     {% include "accounts/_form.html" %}
