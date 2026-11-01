@@ -25,10 +25,12 @@ SECRET_KEY = 'django-insecure-^_5e!p$w@i2e=n)v%cyn@f7d5(6#$q#1m)m406kkuv=0kueq3x
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+import os
+
 ALLOWED_HOSTS = [
-    'placement-portal-cg6r-alpha.vercel.app',
     'localhost',
     '127.0.0.1',
+    '.vercel.app',
 ]
 
 # Application definition
