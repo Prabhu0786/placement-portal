@@ -25,8 +25,11 @@ SECRET_KEY = 'django-insecure-^_5e!p$w@i2e=n)v%cyn@f7d5(6#$q#1m)m406kkuv=0kueq3x
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    'placement-portal-cg6r-alpha.vercel.app',
+    'localhost',
+    '127.0.0.1',
+]
 
 # Application definition
 
@@ -133,3 +136,6 @@ LOGOUT_REDIRECT_URL = 'home'
 import sys
 if "test" in sys.argv:
     PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+CSRF_TRUSTED_ORIGINS = [
+    'https://placement-portal-cg6r-alpha.vercel.app',
+]
