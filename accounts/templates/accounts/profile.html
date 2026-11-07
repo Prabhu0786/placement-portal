@@ -1,47 +1,24 @@
 {% extends "accounts/base.html" %}
 {% block title %}My profile - Placement Prep Portal{% endblock %}
 {% block content %}
-<div class="card">
+<section class="card">
   <div class="row">
-    <h1>My profile</h1>
-    <a class="btn" href="{% url 'profile_edit' %}">Edit profile</a>
+    <div><span class="tag">STUDENT PROFILE</span><h1 style="margin:9px 0 0">My profile</h1><p class="muted" style="margin:5px 0 0">Your details, skills and achievements.</p></div>
+    <a class="btn" href="{% url 'profile_edit' %}">Edit profile →</a>
   </div>
-  <dl>
-    <dt>Name</dt><dd>{{ user.get_full_name|default:user.username }}</dd>
-    <dt>Email</dt><dd>{{ user.email }}</dd>
-    <dt>Programme and year</dt><dd>{{ profile.programme }}, year {{ profile.year }}</dd>
-    <dt>Skills</dt><dd>{{ profile.skills|default:"Not added yet" }}</dd>
-    <dt>Target roles and companies</dt><dd>{{ profile.targets|default:"Not added yet" }}</dd>
-    <dt>Data-sharing consent</dt>
-    <dd>{% if profile.consent_given %}Given on {{ profile.consent_date|date:"j M Y" }}{% else %}Not given{% endif %}</dd>
-  </dl>
-</div>
-
-<div class="card">
-  <div class="row">
-    <h2>Projects, certificates and achievements</h2>
-    <a class="btn secondary" href="{% url 'achievement_add' %}">Add new</a>
+  <div class="grid" style="margin-top:20px">
+    <div><dt>Name</dt><dd>{{ user.get_full_name|default:user.username }}</dd></div>
+    <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+    <div><dt>Programme and year</dt><dd>{{ profile.programme }}, year {{ profile.year }}</dd></div>
+    <div><dt>Data-sharing consent</dt><dd>{% if profile.consent_given %}Given on {{ profile.consent_date|date:"j M Y" }}{% else %}Not given{% endif %}</dd></div>
+    <div style="grid-column:1/-1"><dt>Skills</dt><dd>{{ profile.skills|default:"Not added yet" }}</dd></div>
+    <div style="grid-column:1/-1"><dt>Target roles and companies</dt><dd>{{ profile.targets|default:"Not added yet" }}</dd></div>
   </div>
+</section>
+<section class="card">
+  <div class="row"><div><h2>Projects, certificates and achievements</h2><p class="muted">Showcase the work and milestones that strengthen your profile.</p></div><a class="btn secondary" href="{% url 'achievement_add' %}">+ Add new</a></div>
   {% if achievements %}
-    <ul class="plain">
-      {% for item in achievements %}
-        <li>
-          <div class="row">
-            <div>
-              <strong>{{ item.title }}</strong> <span class="tag">{{ item.get_type_display }}</span>
-              {% if item.description %}<div class="muted">{{ item.description }}</div>{% endif %}
-              {% if item.evidence_link %}<div><a href="{{ item.evidence_link }}" rel="noopener noreferrer" target="_blank">Evidence link</a></div>{% endif %}
-            </div>
-            <form method="post" action="{% url 'achievement_delete' item.pk %}" onsubmit="return confirm('Remove this item?');">
-              {% csrf_token %}
-              <button class="btn danger" type="submit">Remove</button>
-            </form>
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="muted">Nothing added yet. Add your projects, certificates and achievements so you can explain them in interviews.</p>
-  {% endif %}
-</div>
+    <ul class="plain">{% for item in achievements %}<li><div class="row"><div><strong>{{ item.title }}</strong> <span class="tag">{{ item.get_type_display }}</span>{% if item.description %}<div class="muted">{{ item.description }}</div>{% endif %}{% if item.evidence_link %}<div><a href="{{ item.evidence_link }}" rel="noopener noreferrer" target="_blank">View evidence →</a></div>{% endif %}</div><form method="post" action="{% url 'achievement_delete' item.pk %}" onsubmit="return confirm('Remove this item?');">{% csrf_token %}<button class="btn danger small" type="submit">Remove</button></form></div></li>{% endfor %}</ul>
+  {% else %}<p class="muted">Nothing added yet. Add your projects, certificates and achievements so you can explain them in interviews.</p>{% endif %}
+</section>
 {% endblock %}

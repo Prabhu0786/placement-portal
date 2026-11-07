@@ -2,13 +2,15 @@
 {% block title %}Register - Placement Prep Portal{% endblock %}
 {% block content %}
 <div class="card narrow">
-  <h1>Create a student account</h1>
-  <p class="muted">Placement coordinator, faculty and administrator accounts are created by an administrator.</p>
+  <span class="tag">GET STARTED</span>
+  <h1 style="margin-top:12px">Create your student account</h1>
+  <p class="muted">Set up your account and start preparing for placements.</p>
+  <div class="alert warning">Placement coordinator, faculty and administrator accounts are created by an administrator.</div>
   <form method="post" novalidate>
     {% csrf_token %}
     {% include "accounts/_form.html" %}
-    <button class="btn" type="submit">Register</button>
+    <button class="btn" style="width:100%;margin-top:5px" type="submit">Create account →</button>
   </form>
-  <p>Already registered? <a href="{% url 'login' %}">Log in</a></p>
+  <p class="muted" style="text-align:center;margin:18px 0 0">Already registered? <a href="{% url 'login' %}">Log in</a></p>
 </div>
 {% endblock %}

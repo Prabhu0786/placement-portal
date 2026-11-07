@@ -2,12 +2,10 @@
 {% block title %}Add item - Placement Prep Portal{% endblock %}
 {% block content %}
 <div class="card narrow">
-  <h1>Add a project, certificate or achievement</h1>
-  <form method="post" novalidate>
-    {% csrf_token %}
-    {% include "accounts/_form.html" %}
-    <button class="btn" type="submit">Add</button>
-    <a class="btn secondary" href="{% url 'profile' %}">Cancel</a>
+  <span class="tag">BUILD YOUR PORTFOLIO</span><h1 style="margin-top:12px">Add a project, certificate or achievement</h1>
+  <p class="muted">Add details that help employers understand your experience.</p>
+  <form method="post" novalidate>{% csrf_token %}{% include "accounts/_form.html" %}
+    <div class="actions"><button class="btn" type="submit">Add to profile →</button><a class="btn secondary" href="{% url 'profile' %}">Cancel</a></div>
   </form>
 </div>
 {% endblock %}

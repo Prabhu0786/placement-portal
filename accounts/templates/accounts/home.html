@@ -1,11 +1,15 @@
 {% extends "accounts/base.html" %}
+{% block title %}Placement Prep Portal{% endblock %}
 {% block content %}
-<div class="card">
-  <h1>Placement Preparation &amp; Skill Tracking Portal</h1>
-  <p>One place to prepare for placements: learning resources, company information, practice questions, timed mock tests, feedback, progress tracking and a weekly plan.</p>
-  <p>
-    <a class="btn" href="{% url 'register' %}">Create a student account</a>
-    <a class="btn secondary" href="{% url 'login' %}">Log in</a>
-  </p>
-</div>
+<section style="background:linear-gradient(120deg,#172554,#293b83 65%,#5b5ce2);color:#fff;border-radius:24px;padding:clamp(28px,6vw,58px);box-shadow:0 18px 38px #1d2d6840;overflow:hidden">
+  <span style="display:inline-block;background:#ffffff18;border:1px solid #ffffff30;color:#e0e7ff;border-radius:999px;padding:6px 12px;font-size:.78rem;font-weight:700;letter-spacing:.08em">YOUR CAREER STARTS HERE</span>
+  <h1 style="color:#fff;font-size:clamp(2rem,5vw,3.4rem);max-width:760px;margin:20px 0 14px">Prepare smarter.<br>Build skills. Get placement-ready.</h1>
+  <p style="color:#e0e7ff;max-width:650px;font-size:1.05rem">One organised space for learning resources, company research, practice questions, mock assessments, feedback and your weekly preparation plan.</p>
+  <div class="actions" style="margin-top:24px"><a class="btn" style="background:#fff;color:#3435a8" href="{% url 'register' %}">Create student account →</a><a class="btn secondary" style="background:#ffffff12;color:#fff;border-color:#ffffff55" href="{% url 'login' %}">Log in</a></div>
+</section>
+<section class="grid" style="margin-top:20px">
+  <article class="card"><div style="font-size:1.5rem">📘</div><h2>Learn with direction</h2><p class="muted">Find study resources by subject, topic and difficulty.</p></article>
+  <article class="card"><div style="font-size:1.5rem">🎯</div><h2>Practise with purpose</h2><p class="muted">Work on aptitude, verbal, coding and technical questions.</p></article>
+  <article class="card"><div style="font-size:1.5rem">📊</div><h2>Track your growth</h2><p class="muted">Understand your progress and plan your next steps.</p></article>
+</section>
 {% endblock %}
