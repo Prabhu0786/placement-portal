@@ -19,9 +19,11 @@ class CompanyAdmin(admin.ModelAdmin):
 
 @admin.register(Resource)
 class ResourceAdmin(admin.ModelAdmin):
-    list_display = ("title", "topic", "type", "status", "updated_at")
-    list_filter = ("status", "type", "topic")
-    search_fields = ("title",)
+    list_display = (
+        "title", "topic", "type", "language", "is_auto_imported", "status", "updated_at"
+    )
+    list_filter = ("status", "type", "language", "is_auto_imported", "topic")
+    search_fields = ("title", "source", "external_id")
 
 
 @admin.register(Question)

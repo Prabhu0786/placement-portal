@@ -1,0 +1,45 @@
+RESOURCE HUB - WEBSITE AND PDF IMPORTER
+=======================================
+
+Files added:
+- resource_sources.py: allowlist of RSS feeds, curated website links and
+  explicitly licensed PDF links.
+- management/commands/import_web_resources.py: RSS/Atom, curated-page and
+  licensed-PDF link importer.
+
+Run from the project root (the folder containing manage.py):
+
+    python manage.py check
+    python manage.py import_web_resources --feeds-only
+    python manage.py import_web_resources --catalogue-only
+    python manage.py import_web_resources
+
+The command uses Python's standard library; no additional package is needed.
+
+HOW TO ADD A CURATED WEBSITE PAGE
+---------------------------------
+Add an item to CURATED_RESOURCES in resource_sources.py. Use HTTPS, the exact
+approved domain, a title, subject, topic, language (en/hi/other/unknown), type
+(article or link), and enabled=True. The page is linked, not copied.
+
+HOW TO ADD AN OPENLY LICENSED PDF
+---------------------------------
+Add an item to LICENSED_PDF_RESOURCES only after checking the publisher's
+licence or permission. Include name, domain, title, HTTPS PDF URL ending in
+.pdf, subject, topic, language, licence name, licence URL, and enabled=True.
+The importer stores the original PDF link and records the licence name in the
+source label. It does not download or rehost the PDF.
+
+IMPORTANT
+---------
+- Only use feeds and pages whose terms permit this kind of indexing/access.
+- A website being free to read does not automatically mean its PDFs can be
+  redistributed. Do not add copyrighted PDFs without explicit permission.
+- The importer validates HTTPS and the approved host/subdomain before saving.
+- Feed entries are limited to 30 per feed and feed downloads to 5 MB.
+- The current Resource model has no description or licence field. The PDF
+  licence is retained in the source label; no schema migration is required.
+- The command publishes imported entries because the current resource list
+  only displays PUBLISHED records. Check source quality before enabling a new
+  source in production.
+- Existing manual resource records and YouTube importer are preserved.

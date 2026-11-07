@@ -39,6 +39,8 @@ def resource_list(request):
             resources = resources.filter(topic__difficulty=data["difficulty"])
         if data["type"]:
             resources = resources.filter(type=data["type"])
+        if data["language"]:
+            resources = resources.filter(language=data["language"])
     page = Paginator(resources, 10).get_page(request.GET.get("page"))
     params = request.GET.copy()
     params.pop("page", None)

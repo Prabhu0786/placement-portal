@@ -321,6 +321,78 @@ def language_choice(code):
 
 
 # --------------------------------------------------
+# PLACEMENT RELEVANCE AND TOPIC CLASSIFICATION
+# --------------------------------------------------
+
+# RSS entries must match at least one topic group before import.
+TOPIC_RULES = [
+    ("Aptitude", "Quantitative Aptitude", (
+        "quantitative aptitude", "logical reasoning", "verbal reasoning",
+        "number series", "percentages", "profit and loss", "time and work",
+        "time speed distance", "permutation", "combination", "probability",
+        "placement aptitude", "aptitude test",
+    )),
+    ("Interview Preparation", "Interview Preparation", (
+        "technical interview", "hr interview", "interview questions",
+        "interview preparation", "job interview", "behavioral interview",
+        "resume", "cv writing", "cover letter", "placement preparation",
+        "campus placement", "job search", "career advice",
+    )),
+    ("Data Structures and Algorithms", "Data Structures and Algorithms", (
+        "data structure", "algorithm", "leetcode", "coding interview",
+        "competitive programming", "dynamic programming", "binary search",
+        "linked list", "binary tree", "graph traversal", "sorting algorithm",
+        "time complexity", "space complexity",
+    )),
+    ("Database Management", "DBMS and SQL", (
+        "database", "sql", "postgresql", "mysql", "mongodb",
+        "database management", "database query", "joins",
+    )),
+    ("Operating Systems", "Operating Systems", (
+        "operating system", "process scheduling", "deadlock",
+        "memory management", "virtual memory", "linux kernel",
+        "concurrency", "thread synchronization",
+    )),
+    ("Web Development", "HTML CSS JavaScript", (
+        "html", "css", "javascript", "typescript", "react",
+        "frontend", "front-end", "web development", "web developer",
+        "responsive design", "dom", "next.js", "node.js",
+        "website performance", "web accessibility",
+    )),
+    ("Programming", "Programming Languages", (
+        "python", "java programming", "c++", " c language",
+        "programming language", "object-oriented programming",
+        "oop", "debugging", "software development", "code tutorial",
+        "programming tutorial",
+    )),
+    ("Artificial Intelligence", "AI and Machine Learning", (
+        "artificial intelligence", "machine learning", "deep learning",
+        "neural network", "large language model", "generative ai",
+        "data science", "natural language processing",
+    )),
+    ("Cybersecurity", "Cybersecurity Fundamentals", (
+        "cybersecurity", "cyber security", "network security",
+        "ethical hacking", "penetration testing", "cryptography",
+        "phishing", "web security", "vulnerability",
+    )),
+    ("Tools and DevOps", "Developer Tools and DevOps", (
+        "git", "github", "docker", "kubernetes", "devops",
+        "continuous integration", "ci/cd", "cloud computing",
+        "linux command", "version control", "api development",
+    )),
+]
+
+
+def classify_placement_resource(title, description=""):
+    """Return a placement-relevant (subject, topic), or None."""
+    text = f" {title or ''} {description or ''} ".casefold()
+    for subject, topic, keywords in TOPIC_RULES:
+        if any(keyword.casefold() in text for keyword in keywords):
+            return subject, topic
+    return None
+
+
+# --------------------------------------------------
 # TOPIC CREATION
 # --------------------------------------------------
 
@@ -549,13 +621,29 @@ class Command(BaseCommand):
 
                     try:
 
+                        category = classify_placement_resource(
+                            entry["title"],
+                            entry.get("description", ""),
+                        )
+
+                        if category is None:
+                            counts["rejected"] += 1
+                            self.stdout.write(
+                                self.style.WARNING(
+                                    f"Skipped unrelated article: {entry['title']}"
+                                )
+                            )
+                            continue
+
+                        subject, topic_name = category
+
                         result = import_one_resource(
                             title=entry["title"],
                             url=entry["url"],
                             source_name=name,
                             domain=source["domain"],
-                            subject=source["subject"],
-                            topic_name=source["topic"],
+                            subject=subject,
+                            topic_name=topic_name,
                             language=source.get(
                                 "language",
                                 "unknown"
@@ -796,7 +884,7 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.WARNING(
-                f"Rejected: {counts['rejected']}"
+                f"Rejected / not relevant: {counts['rejected']}"
             )
         )
 

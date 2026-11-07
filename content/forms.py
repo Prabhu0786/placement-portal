@@ -19,6 +19,11 @@ class ResourceFilterForm(forms.Form):
         label="Type",
         choices=[("", "All types")] + list(Resource.ResourceType.choices),
     )
+    language = forms.ChoiceField(
+        required=False,
+        label="Language",
+        choices=[("", "All languages")] + list(Resource.Language.choices),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
