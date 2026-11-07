@@ -1,0 +1,76 @@
+{% extends "accounts/base.html" %}
+{% block title %}AI Placement Assistant{% endblock %}
+{% block content %}
+<style>
+.ai-container{max-width:900px;margin:20px auto}
+.ai-header{background:linear-gradient(120deg,#172554,#293b83 65%,#5b5ce2);color:#fff;padding:28px;border-radius:20px;margin-bottom:20px}
+.ai-header h1{color:#fff;margin:8px 0}
+.ai-header p{color:#e0e7ff;margin:0}
+.ai-chat-box{min-height:280px;max-height:560px;overflow-y:auto;padding:18px;background:#f8fafc;border-radius:16px;margin:18px 0}
+.ai-message{padding:14px 16px;border-radius:14px;margin-bottom:15px;line-height:1.6;overflow-wrap:anywhere}
+.ai-user{background:#e0e7ff;margin-left:12%}
+.ai-bot{background:#fff;border:1px solid #e5e7eb;margin-right:8%}
+.ai-message p{margin:6px 0 0;white-space:pre-wrap}
+.ai-input textarea{width:100%;min-height:100px;resize:vertical;padding:14px;border:1px solid #d1d5db;border-radius:12px;font:inherit;box-sizing:border-box}
+.ai-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.ai-empty{text-align:center;padding:40px 15px}
+@media(max-width:600px){.ai-user{margin-left:3%}.ai-bot{margin-right:3%}.ai-header{padding:22px}}
+</style>
+
+<div class="ai-container">
+    <section class="ai-header">
+        <div style="font-size:.75rem;letter-spacing:.13em;font-weight:800;color:#c7d2fe">GEMINI POWERED</div>
+        <h1>AI Placement Assistant 🤖</h1>
+        <p>Your personal companion for learning, practice and placement preparation.</p>
+    </section>
+
+    <section class="card">
+        <div class="row">
+            <div><span class="tag">AI CHAT</span><h2 style="margin:8px 0 0">Ask anything</h2></div>
+            <span style="font-size:1.6rem">✨</span>
+        </div>
+
+        {% if error %}<div class="alert warning" style="margin-top:15px">{{ error }}</div>{% endif %}
+
+        <div class="ai-chat-box" id="chatBox" aria-live="polite">
+            {% for item in history %}
+                <div class="ai-message ai-user"><strong>You</strong><p>{{ item.user }}</p></div>
+                <div class="ai-message ai-bot"><strong>🤖 AI Assistant</strong><p>{{ item.assistant }}</p></div>
+            {% empty %}
+                <div class="ai-empty">
+                    <div style="font-size:45px;margin-bottom:12px">💬</div>
+                    <h2>How can I help you today?</h2>
+                    <p class="muted">Ask about programming, DSA, DBMS, aptitude or interview preparation.</p>
+                    <p class="muted">Example: Explain binary search in Java with a simple example.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <form method="POST" class="ai-input">
+            {% csrf_token %}
+            <label for="message"><strong>Your question</strong></label>
+            <textarea id="message" name="message" maxlength="4000" required
+                placeholder="Type your placement preparation question..."></textarea>
+            <div class="ai-actions"><button type="submit" class="btn">Send message →</button></div>
+        </form>
+
+        {% if history %}
+            <form method="POST" action="{% url 'ai_clear_chat' %}" style="margin-top:12px">
+                {% csrf_token %}
+                <button type="submit" class="btn secondary">Clear conversation</button>
+            </form>
+        {% endif %}
+    </section>
+
+    <p class="muted" style="text-align:center;font-size:.8rem;margin-top:12px">
+        AI-generated answers may occasionally contain errors. Verify important information.
+    </p>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const chatBox = document.getElementById("chatBox");
+    if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+});
+</script>
+{% endblock %}
