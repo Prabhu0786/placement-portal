@@ -61,7 +61,7 @@ def start_assessment_attempt(user, assessment):
 def autosave_answer(attempt, question_id, answer):
     """Save one answer. Returns 'saved', 'unknown', or 'expired' / 'closed' when no longer allowed."""
     with transaction.atomic():
-        attempt = Attempt.objects.select_for_update().get(pk=attempt.pk)
+        attempt = Attempt.objects.select_for_update(of=("self",)).get(pk=attempt.pk)
         if attempt.status != Attempt.Status.IN_PROGRESS:
             return "closed"
         if is_expired(attempt):
@@ -92,7 +92,8 @@ def finish_attempt(attempt, answers=None):
     Calling this on an attempt that is not In progress does nothing (BR-7).
     """
     with transaction.atomic():
-        attempt = Attempt.objects.select_for_update().select_related("assessment").get(pk=attempt.pk)
+        # of=("self",): lock only the attempt row. PostgreSQL cannot lock the optional assessment join.
+        attempt = Attempt.objects.select_for_update(of=("self",)).select_related("assessment").get(pk=attempt.pk)
         if attempt.status != Attempt.Status.IN_PROGRESS:
             return attempt
         now = timezone.now()
