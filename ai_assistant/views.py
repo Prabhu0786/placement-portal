@@ -1,252 +1,239 @@
-
+import json
 import logging
 import os
-import time
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
-
+from django.http import JsonResponse, StreamingHttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 from google import genai
 from google.genai import types
 
+from .models import Conversation, Message
 
 logger = logging.getLogger(__name__)
 
-MAX_MESSAGE_LENGTH = 4000
-MAX_HISTORY_ITEMS = 10
+MAX_MESSAGE_LENGTH = 6000
+MAX_CONTEXT_MESSAGES = 24
 
-RETRYABLE_STATUS_CODES = {429, 500, 503, 504}
-MAX_ATTEMPTS_PER_MODEL = 2
+SYSTEM_INSTRUCTIONS = """
+You are the AI Placement Assistant in a university placement preparation portal.
+Help students with programming, DSA, computer science subjects, aptitude,
+interview preparation, resumes, career planning and professional communication.
+
+Be accurate, friendly, practical and clear. Explain concepts step by step for
+beginners when needed. For code, give readable code and explain important parts.
+For practice or mock interviews, ask one question at a time and wait for the
+student's answer. Never invent job openings, deadlines, company policies,
+student grades or personal records. Be honest when uncertain. Reply in the
+language requested by the student, or follow the language they use.
+Use Markdown headings, lists and fenced code blocks where useful.
+"""
 
 
-def generate_ai_response(client, primary_model, prompt):
-
-    # Primary model remains Gemini 3.8.
-    # Fallback is used only if the primary model fails.
-    fallback_model = os.getenv(
-        "GEMINI_FALLBACK_MODEL",
-        "gemini-2.5-flash-lite"
-    )
-
-    models_to_try = [primary_model]
-
-    if fallback_model and fallback_model != primary_model:
-        models_to_try.append(fallback_model)
-
-    last_error = None
-
-    for model_name in models_to_try:
-
-        for attempt in range(MAX_ATTEMPTS_PER_MODEL):
-
-            try:
-                response = client.models.generate_content(
-                    model=model_name,
-                    contents=prompt,
-                )
-
-                answer = (response.text or "").strip()
-
-                if answer:
-                    if model_name != primary_model:
-                        logger.info(
-                            "Fallback Gemini model used: %s",
-                            model_name
-                        )
-
-                    return answer
-
-                last_error = RuntimeError(
-                    "Gemini returned an empty response."
-                )
-                break
-
-            except Exception as exc:
-
-                last_error = exc
-
-                status_code = getattr(
-                    exc,
-                    "status_code",
-                    None
-                )
-
-                if status_code not in RETRYABLE_STATUS_CODES:
-                    logger.exception(
-                        "Gemini model %s failed.",
-                        model_name
-                    )
-                    break
-
-                logger.warning(
-                    "Gemini model %s returned status %s. "
-                    "Attempt %s of %s.",
-                    model_name,
-                    status_code,
-                    attempt + 1,
-                    MAX_ATTEMPTS_PER_MODEL
-                )
-
-                if attempt + 1 < MAX_ATTEMPTS_PER_MODEL:
-                    time.sleep(1.5 * (attempt + 1))
-
-    if last_error:
-        raise last_error
-
-    raise RuntimeError("No Gemini model was available.")
+def _owned_conversation(user, conversation_id):
+    return get_object_or_404(Conversation, pk=conversation_id, user=user)
 
 
 @login_required
 def chat(request):
+    conversations = Conversation.objects.filter(user=request.user)[:60]
+    active_id = request.GET.get("conversation")
+    active_conversation = None
+    messages = []
 
-    history = request.session.get(
-        "ai_chat_history",
-        []
-    )
-
-    if request.method == "POST":
-
-        message = request.POST.get(
-            "message",
-            ""
-        ).strip()
-
-        if not message:
-            return render(
-                request,
-                "ai_assistant/chat.html",
-                {
-                    "history": history,
-                    "error": "Please enter a message."
-                }
-            )
-
-        if len(message) > MAX_MESSAGE_LENGTH:
-            return render(
-                request,
-                "ai_assistant/chat.html",
-                {
-                    "history": history,
-                    "error": (
-                        f"Message is too long. Maximum "
-                        f"{MAX_MESSAGE_LENGTH} characters."
-                    )
-                }
-            )
-
-        api_key = os.getenv("GEMINI_API_KEY")
-
-        primary_model = os.getenv(
-            "GEMINI_MODEL",
-            "gemini-3.8-flash"
-        )
-
-        if not api_key:
-            return render(
-                request,
-                "ai_assistant/chat.html",
-                {
-                    "history": history,
-                    "error": (
-                        "AI service is not configured. "
-                        "Please contact the administrator."
-                    )
-                }
-            )
-
-        client = None
-
+    if active_id:
         try:
+            active_conversation = _owned_conversation(request.user, int(active_id))
+            messages = list(active_conversation.messages.all())
+        except (ValueError, TypeError):
+            active_conversation = None
 
-            client = genai.Client(
-                api_key=api_key,
-                http_options=types.HttpOptions(
-                    timeout=30000
-                )
-            )
-
-            conversation = []
-
-            for item in history[-MAX_HISTORY_ITEMS:]:
-
-                conversation.append(
-                    f"Student: {item['user']}\n"
-                    f"Assistant: {item['assistant']}"
-                )
-
-            conversation.append(
-                f"Student: {message}"
-            )
-
-            prompt = (
-                "You are an AI Placement Preparation Assistant. "
-                "Help students with programming, data structures "
-                "and algorithms, DBMS, SQL, operating systems, "
-                "computer networks, aptitude, reasoning, technical "
-                "and HR interviews, resumes and career guidance. "
-                "Explain concepts in simple, friendly language. "
-                "Use examples and code when useful. Structure "
-                "longer answers with headings and lists. "
-                "Do not claim to know the student's actual "
-                "performance unless explicitly provided. "
-                "If unsure, say so.\n\n"
-                "Conversation:\n"
-                + "\n\n".join(conversation)
-            )
-
-            answer = generate_ai_response(
-                client,
-                primary_model,
-                prompt
-            )
-
-            history.append({
-                "user": message,
-                "assistant": answer
-            })
-
-            request.session["ai_chat_history"] = (
-                history[-MAX_HISTORY_ITEMS:]
-            )
-
-        except Exception:
-
-            logger.exception(
-                "Gemini request failed in AI placement assistant"
-            )
-
-            return render(
-                request,
-                "ai_assistant/chat.html",
-                {
-                    "history": history,
-                    "error": (
-                        "The AI service is busy right now. "
-                        "Please wait a few seconds and try again."
-                    )
-                }
-            )
-
-        finally:
-
-            if client is not None:
-                client.close()
-
-    return render(
-        request,
-        "ai_assistant/chat.html",
-        {
-            "history": history
-        }
-    )
+    return render(request, "ai_assistant/chat.html", {
+        "conversations": conversations,
+        "active_conversation": active_conversation,
+        "messages": messages,
+    })
 
 
 @login_required
+@require_POST
+def new_conversation(request):
+    conversation = Conversation.objects.create(user=request.user)
+    return JsonResponse({
+        "id": conversation.id,
+        "url": f"/ai-assistant/conversation/{conversation.id}/",
+    })
+
+
+@login_required
+@require_POST
+def send_message(request):
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"error": "Invalid request."}, status=400)
+
+    message_text = str(data.get("message", "")).strip()
+    conversation_id = data.get("conversation_id")
+    language = str(data.get("language", "auto"))
+    mode = str(data.get("mode", "general"))
+
+    if not message_text:
+        return JsonResponse({"error": "Please type a message."}, status=400)
+    if len(message_text) > MAX_MESSAGE_LENGTH:
+        return JsonResponse({"error": f"Message must be under {MAX_MESSAGE_LENGTH} characters."}, status=400)
+
+    if language not in {"auto", "english", "hindi", "hinglish"}:
+        language = "auto"
+    if mode not in {"general", "explain", "practice", "interview", "resume"}:
+        mode = "general"
+
+    if conversation_id:
+        conversation = _owned_conversation(request.user, conversation_id)
+    else:
+        conversation = Conversation.objects.create(user=request.user)
+
+    is_first_message = not conversation.messages.exists()
+    user_message = Message.objects.create(
+        conversation=conversation,
+        role=Message.Role.USER,
+        content=message_text,
+    )
+    if is_first_message:
+        conversation.title = message_text[:68].strip() or "New chat"
+        if len(message_text) > 68:
+            conversation.title = conversation.title.rstrip() + "…"
+    conversation.save()
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    model_name = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+    if not api_key:
+        return JsonResponse({"error": "AI service is not configured. Please contact the administrator."}, status=503)
+
+    previous = list(
+        conversation.messages.exclude(pk=user_message.pk)
+        .order_by("-created_at")[:MAX_CONTEXT_MESSAGES]
+    )
+    previous.reverse()
+
+    mode_text = {
+        "general": "Answer directly and helpfully.",
+        "explain": "Teach from basics, with a simple example and short recap.",
+        "practice": "Ask one practice question at a time. Wait for the student's answer before evaluating.",
+        "interview": "Conduct a realistic fresher mock interview, one question at a time. Give constructive feedback after each answer.",
+        "resume": "Review only resume details provided. Do not invent achievements or experience.",
+    }[mode]
+    language_text = {
+        "auto": "Use the student's language.",
+        "english": "Use clear, simple English.",
+        "hindi": "Use simple Hindi, retaining technical terms in English where useful.",
+        "hinglish": "Use natural, simple Hinglish.",
+    }[language]
+
+    prompt_parts = [
+        SYSTEM_INSTRUCTIONS,
+        f"\nCurrent mode: {mode_text}\nResponse language: {language_text}\n",
+    ]
+    for item in previous:
+        speaker = "Student" if item.role == Message.Role.USER else "Assistant"
+        prompt_parts.append(f"{speaker}: {item.content}")
+    prompt_parts.append(f"Student: {message_text}\nAssistant:")
+    prompt = "\n\n".join(prompt_parts)
+
+    def stream_answer():
+        client = None
+        collected = []
+        try:
+            client = genai.Client(
+                api_key=api_key,
+                http_options=types.HttpOptions(timeout=60000),
+            )
+            for chunk in client.models.generate_content_stream(
+                model=model_name,
+                contents=prompt,
+            ):
+                piece = getattr(chunk, "text", None)
+                if piece:
+                    collected.append(piece)
+                    yield piece
+            final_text = "".join(collected).strip()
+            if final_text:
+                Message.objects.create(
+                    conversation=conversation,
+                    role=Message.Role.ASSISTANT,
+                    content=final_text,
+                )
+                conversation.save()
+            else:
+                fallback_text = "I couldn't generate a response. Please try again."
+                Message.objects.create(
+                    conversation=conversation,
+                    role=Message.Role.ASSISTANT,
+                    content=fallback_text,
+                )
+                yield fallback_text
+        except Exception:
+            logger.exception("Streaming Gemini response failed.")
+            if collected:
+                partial = "".join(collected)
+                Message.objects.create(
+                    conversation=conversation,
+                    role=Message.Role.ASSISTANT,
+                    content=partial,
+                )
+                yield "\n\n[Response interrupted. Please try again if anything is missing.]"
+            else:
+                error_text = "The AI service is busy or unavailable. Please try again in a moment."
+                Message.objects.create(
+                    conversation=conversation,
+                    role=Message.Role.ASSISTANT,
+                    content=error_text,
+                )
+                yield error_text
+        finally:
+            if client is not None:
+                client.close()
+
+    response = StreamingHttpResponse(stream_answer(), content_type="text/plain; charset=utf-8")
+    response["Cache-Control"] = "no-cache, no-transform"
+    response["X-Accel-Buffering"] = "no"
+    response["X-Conversation-Id"] = str(conversation.id)
+    return response
+
+
+@login_required
+@require_POST
+def rename_conversation(request, conversation_id):
+    conversation = _owned_conversation(request.user, conversation_id)
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"error": "Invalid request."}, status=400)
+    title = str(data.get("title", "")).strip()
+    if not title:
+        return JsonResponse({"error": "Chat title cannot be empty."}, status=400)
+    conversation.title = title[:120]
+    conversation.save(update_fields=["title", "updated_at"])
+    return JsonResponse({"title": conversation.title})
+
+
+@login_required
+@require_POST
+def delete_conversation(request, conversation_id):
+    conversation = _owned_conversation(request.user, conversation_id)
+    conversation.delete()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+@require_POST
 def clear_chat(request):
-
-    if request.method != "POST":
-        return redirect("ai_chat")
-
-    request.session["ai_chat_history"] = []
-
+    Conversation.objects.filter(user=request.user).delete()
     return redirect("ai_chat")
+
+
+@login_required
+def open_conversation(request, conversation_id):
+    _owned_conversation(request.user, conversation_id)
+    return redirect(f"/ai-assistant/?conversation={conversation_id}")
