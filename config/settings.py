@@ -40,18 +40,23 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    # Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Our apps
+
+    # Existing project apps
     'accounts',
-    'content',
-    'assessments',
     'analytics',
+    'assessments',
+    'content',
     'planning',
+
+    # New AI app
+    'ai_assistant',
 ]
 
 MIDDLEWARE = [
