@@ -1,6 +1,7 @@
 
 import json
 import os
+
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
@@ -15,6 +16,7 @@ YOUTUBE_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 YOUTUBE_VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos"
 
 
+# Subjects and search queries
 SEARCHES = [
     (
         "Data Structures and Algorithms",
@@ -57,17 +59,23 @@ SEARCHES = [
 
 def youtube_request(url, params):
     """Send a GET request to the YouTube Data API."""
+
     request_url = url + "?" + urlencode(params)
 
     with urlopen(request_url, timeout=30) as response:
         return json.loads(response.read().decode("utf-8"))
 
 
-
 def detect_language(video_details):
     """
-    Conservative language classification using YouTube metadata
-    and explicit language clues in the video title.
+    Classify language using YouTube metadata
+    and explicit language clues in the title.
+
+    Returns:
+        en      English
+        hi      Hindi
+        other   Other language
+        unknown Language not identified
     """
 
     snippet = video_details.get("snippet", {})
@@ -76,25 +84,32 @@ def detect_language(video_details):
     # Explicit language clues in titles take priority.
     language_keywords = {
         "hi": [
-            "hindi", "in hindi", "हिंदी"
+            "hindi",
+            "in hindi",
+            "हिंदी",
         ],
         "other": [
-            "telugu", "in telugu", "తెలుగు",
-            "tamil", "in tamil", "தமிழ்",
-            "malayalam", "ಕನ್ನಡ", "kannada",
-            "bengali", "বাংলা", "urdu", "اردو"
+            "telugu",
+            "in telugu",
+            "తెలుగు",
+            "tamil",
+            "in tamil",
+            "தமிழ்",
+            "malayalam",
+            "kannada",
+            "ಕನ್ನಡ",
+            "bengali",
+            "বাংলা",
+            "urdu",
+            "اردو",
         ],
     }
 
     for language, keywords in language_keywords.items():
         if any(keyword in title for keyword in keywords):
-            return (
-                Resource.Language.HINDI
-                if language == "hi"
-                else Resource.Language.OTHER
-            )
+            return language
 
-    # Check YouTube's metadata.
+    # Check YouTube language metadata.
     language_code = (
         snippet.get("defaultAudioLanguage")
         or snippet.get("defaultLanguage")
@@ -102,20 +117,23 @@ def detect_language(video_details):
     ).lower()
 
     if language_code.startswith("hi"):
-        return Resource.Language.HINDI
+        return "hi"
 
     if language_code.startswith("en"):
-        return Resource.Language.ENGLISH
+        return "en"
 
     if language_code:
-        return Resource.Language.OTHER
+        return "other"
 
-    return Resource.Language.UNKNOWN
+    return "unknown"
+
 
 class Command(BaseCommand):
+
     help = "Import and update Hindi and English YouTube learning resources."
 
     def add_arguments(self, parser):
+
         parser.add_argument(
             "--max-results",
             type=int,
@@ -125,11 +143,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
+        # Read YouTube API key.
         api_key = os.environ.get("YOUTUBE_API_KEY", "").strip()
 
         if not api_key:
             raise CommandError(
-                "YOUTUBE_API_KEY is missing. Check your .env file."
+                "YOUTUBE_API_KEY is missing. Check your environment variables."
             )
 
         max_results = options["max_results"]
@@ -144,14 +163,18 @@ class Command(BaseCommand):
         skipped = 0
         errors = 0
 
+        # Process each subject.
         for subject, topic_name, english_query, hindi_query in SEARCHES:
 
             topic, _ = Topic.objects.get_or_create(
                 subject=subject,
                 name=topic_name,
-                defaults={"difficulty": Difficulty.EASY},
+                defaults={
+                    "difficulty": Difficulty.EASY,
+                },
             )
 
+            # Search in English and Hindi.
             for language, query in (
                 ("en", english_query),
                 ("hi", hindi_query),
@@ -162,6 +185,7 @@ class Command(BaseCommand):
                 )
 
                 try:
+
                     search_data = youtube_request(
                         YOUTUBE_SEARCH_URL,
                         {
@@ -177,14 +201,19 @@ class Command(BaseCommand):
                     )
 
                 except HTTPError as exc:
+
                     detail = exc.read().decode(
-                        "utf-8", errors="replace"
+                        "utf-8",
+                        errors="replace",
                     )
+
                     self.stderr.write(
                         self.style.ERROR(
-                            f"YouTube search error {exc.code}: {detail[:500]}"
+                            f"YouTube search error {exc.code}: "
+                            f"{detail[:500]}"
                         )
                     )
+
                     errors += 1
                     continue
 
@@ -194,9 +223,13 @@ class Command(BaseCommand):
                     OSError,
                     json.JSONDecodeError,
                 ) as exc:
+
                     self.stderr.write(
-                        self.style.ERROR(f"Search failed: {exc}")
+                        self.style.ERROR(
+                            f"Search failed: {exc}"
+                        )
                     )
+
                     errors += 1
                     continue
 
@@ -211,8 +244,9 @@ class Command(BaseCommand):
                 if not video_ids:
                     continue
 
-                # Get actual language metadata for these videos.
+                # Retrieve video language metadata.
                 try:
+
                     details_data = youtube_request(
                         YOUTUBE_VIDEOS_URL,
                         {
@@ -229,11 +263,13 @@ class Command(BaseCommand):
                     OSError,
                     json.JSONDecodeError,
                 ) as exc:
+
                     self.stderr.write(
                         self.style.ERROR(
                             f"Could not retrieve video details: {exc}"
                         )
                     )
+
                     errors += 1
                     continue
 
@@ -242,12 +278,16 @@ class Command(BaseCommand):
                     for video in details_data.get("items", [])
                 }
 
+                # Process each video.
                 for item in items:
 
                     video_id = item.get("id", {}).get("videoId")
                     snippet = item.get("snippet", {})
 
-                    title = (snippet.get("title") or "").strip()
+                    title = (
+                        snippet.get("title") or ""
+                    ).strip()
+
                     channel = (
                         snippet.get("channelTitle") or ""
                     ).strip()
@@ -266,9 +306,10 @@ class Command(BaseCommand):
                         skipped += 1
                         continue
 
+                    # Detect actual language from available metadata.
                     actual_language = detect_language(details)
 
-                    # Find an existing resource using its video ID or URL.
+                    # Find existing resource using video ID or URL.
                     existing = Resource.objects.filter(
                         Q(external_id=video_id)
                         | Q(url=video_url)
@@ -276,14 +317,18 @@ class Command(BaseCommand):
 
                     if existing:
 
-                        # Correct old language labels when metadata is available.
+                        # Update language only when it is identified.
                         if (
-                            actual_language
-                            != Resource.Language.UNKNOWN
+                            actual_language != "unknown"
                             and existing.language != actual_language
                         ):
+
                             existing.language = actual_language
-                            existing.save(update_fields=["language"])
+
+                            existing.save(
+                                update_fields=["language"]
+                            )
+
                             updated += 1
 
                             self.stdout.write(
@@ -292,19 +337,22 @@ class Command(BaseCommand):
                                     f"-> {actual_language}"
                                 )
                             )
+
                         else:
                             skipped += 1
 
                         continue
 
+                    # Create new YouTube resource.
                     Resource.objects.create(
                         topic=topic,
                         title=title[:200],
-                        type=Resource.ResourceType.VIDEO,
+                        type="video",
                         url=video_url,
                         source=(
                             f"YouTube - {channel}"
-                            if channel else "YouTube"
+                            if channel
+                            else "YouTube"
                         )[:255],
                         language=actual_language,
                         external_id=video_id,
@@ -322,17 +370,31 @@ class Command(BaseCommand):
                         )
                     )
 
+        # Final summary.
         self.stdout.write("\n" + "=" * 45)
+
         self.stdout.write(
-            self.style.SUCCESS(f"New videos imported: {imported}")
+            self.style.SUCCESS(
+                f"New videos imported: {imported}"
+            )
         )
+
         self.stdout.write(
-            self.style.SUCCESS(f"Existing videos updated: {updated}")
+            self.style.SUCCESS(
+                f"Existing videos updated: {updated}"
+            )
         )
+
         self.stdout.write(
-            self.style.WARNING(f"Skipped: {skipped}")
+            self.style.WARNING(
+                f"Skipped: {skipped}"
+            )
         )
+
         self.stdout.write(
-            self.style.ERROR(f"Errors: {errors}")
+            self.style.ERROR(
+                f"Errors: {errors}"
+            )
         )
+
         self.stdout.write("=" * 45)
