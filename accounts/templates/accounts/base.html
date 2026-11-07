@@ -120,24 +120,59 @@
       <nav aria-label="Main">
         {% if user.is_authenticated %}
           <a href="{% url 'dashboard' %}">Dashboard</a>
-          {% if user.is_student %}<a href="{% url 'practice_home' %}">Practice</a><a href="{% url 'assessment_list' %}">Assessments</a><a href="{% url 'progress' %}">Progress</a><a href="{% url 'plan' %}">Plan</a><a href="{% url 'recommendations' %}">For you</a>{% endif %}
-          {% if user.is_tpo %}<a href="{% url 'reports_home' %}">Reports</a>{% endif %}
+
+          {% if user.is_student %}
+            <a href="{% url 'practice_home' %}">Practice</a>
+            <a href="{% url 'assessment_list' %}">Assessments</a>
+            <a href="{% url 'progress' %}">Progress</a>
+            <a href="{% url 'plan' %}">Plan</a>
+            <a href="{% url 'recommendations' %}">For you</a>
+            <a href="{% url 'ai_chat' %}">AI Assistant</a>
+          {% endif %}
+
+          {% if user.is_tpo %}
+            <a href="{% url 'reports_home' %}">Reports</a>
+          {% endif %}
+
           <a href="{% url 'resource_list' %}">Resources</a>
           <a href="{% url 'company_list' %}">Companies</a>
-          {% if user.is_student %}<a href="{% url 'profile' %}">My profile</a>{% endif %}
-          {% if user.is_tpo or user.is_faculty %}<a href="{% url 'manage_home' %}">Manage</a>{% endif %}
-          {% if user.is_staff %}<a href="/admin/">Admin</a>{% endif %}
-          <form class="inline" method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out ↗</button></form>
+
+          {% if user.is_student %}
+            <a href="{% url 'profile' %}">My profile</a>
+          {% endif %}
+
+          {% if user.is_tpo or user.is_faculty %}
+            <a href="{% url 'manage_home' %}">Manage</a>
+          {% endif %}
+
+          {% if user.is_staff %}
+            <a href="/admin/">Admin</a>
+          {% endif %}
+
+          <form class="inline" method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit">Log out ↗</button>
+          </form>
         {% else %}
-          <a href="{% url 'home' %}">Home</a><a href="{% url 'login' %}">Log in</a><a href="{% url 'register' %}">Register</a>
+          <a href="{% url 'home' %}">Home</a>
+          <a href="{% url 'login' %}">Log in</a>
+          <a href="{% url 'register' %}">Register</a>
         {% endif %}
       </nav>
     </div>
   </header>
+
   <main id="content">
-    {% if messages %}{% for message in messages %}<div class="alert {{ message.tags }}" role="status">{{ message }}</div>{% endfor %}{% endif %}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert {{ message.tags }}" role="status">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
     {% block content %}{% endblock %}
   </main>
-  <footer class="page-footer">Placement Prep Portal · Build skills with consistency.</footer>
+
+  <footer class="page-footer">
+    Placement Prep Portal · Build skills with consistency.
+  </footer>
 </body>
 </html>
