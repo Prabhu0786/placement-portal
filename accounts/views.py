@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+from analytics import services as analytics_services
 
 from .forms import (
     AchievementForm,
@@ -45,28 +46,52 @@ class PortalLoginView(LoginView):
 @login_required
 def dashboard(request):
     context = {}
+
     if request.user.is_student:
-        profile, _ = StudentProfile.objects.get_or_create(user=request.user)
+        profile, _ = StudentProfile.objects.get_or_create(
+            user=request.user
+        )
+
         checklist = [
             ("Add your skills", bool(profile.skills.strip())),
-            ("Add your target roles and companies", bool(profile.targets.strip())),
-            ("Give consent for data sharing", profile.consent_given),
+            (
+                "Add your target roles and companies",
+                bool(profile.targets.strip())
+            ),
+            (
+                "Give consent for data sharing",
+                profile.consent_given
+            ),
             (
                 "Add a project, certificate or achievement",
-                request.user.project_achievements.exists(),
+                request.user.project_achievements.exists()
             ),
         ]
+
         done = sum(1 for _, ok in checklist if ok)
-        from planning import services as planning  # local import avoids a circular import
+
+        from planning import services as planning
 
         context.update(
             profile=profile,
             checklist=checklist,
             completeness=round(100 * done / len(checklist)),
             reminders=planning.reminders(request.user),
-            top_recommendations=planning.current_recommendations(request.user)[:3],
+            top_recommendations=(
+                planning.current_recommendations(request.user)[:3]
+            ),
+
+            # Real performance data
+            overview=analytics_services.student_overview(
+                request.user
+            ),
         )
-    return render(request, "accounts/dashboard.html", context)
+
+    return render(
+        request,
+        "accounts/dashboard.html",
+        context
+    )
 
 
 @role_required("Student")
