@@ -78,6 +78,69 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
  .ai-message{gap:9px;margin-bottom:21px}
  .ai-avatar{width:28px;height:28px;flex-basis:28px}
 }
+
+/* Premium theme system */
+.ai-workspace{
+ --ai-bg:#ffffff;--ai-panel:#ffffff;--ai-sidebar:#f7f8fc;--ai-border:#e6e9f2;
+ --ai-text:#263452;--ai-muted:#778198;--ai-hover:#eef1ff;--ai-code:#111a2e;
+ --ai-shadow:0 18px 50px rgba(25,42,85,.10);
+ background:var(--ai-bg);border-color:var(--ai-border);box-shadow:var(--ai-shadow);
+}
+.ai-sidebar{background:var(--ai-sidebar);border-color:var(--ai-border)}
+.ai-main{background:var(--ai-bg)}
+.ai-topbar{border-color:var(--ai-border)}
+.ai-top-title,.ai-message-text{color:var(--ai-text)}
+.ai-side-brand,.ai-welcome h1{color:var(--ai-text)}
+.ai-chat-link{color:var(--ai-muted)}
+.ai-chat-link:hover,.ai-chat-link.active{background:var(--ai-hover)}
+.ai-prompt{background:var(--ai-panel);border-color:var(--ai-border);color:var(--ai-text)}
+.ai-prompt:hover{background:var(--ai-hover)}
+.ai-message-name,.ai-welcome p,.ai-prompt span{color:var(--ai-muted)}
+.ai-compose{background:var(--ai-panel);border-color:var(--ai-border)}
+.ai-compose textarea{color:var(--ai-text)}
+.ai-model-pill{background:var(--ai-hover);color:var(--ai-text)}
+.ai-theme-toggle{border:1px solid var(--ai-border);background:var(--ai-panel);color:var(--ai-text);
+ border-radius:10px;padding:8px 11px;cursor:pointer;font:inherit;font-size:.82rem;
+ display:inline-flex;align-items:center;gap:7px;transition:.18s}
+.ai-theme-toggle:hover{background:var(--ai-hover)}
+.ai-top-actions{display:flex;align-items:center;gap:10px}
+.ai-message-text a{color:#6669df;text-decoration:underline;text-underline-offset:3px}
+.ai-message-text strong{font-weight:800}
+.ai-message-text ul,.ai-message-text ol{padding-left:1.4rem;margin:.5rem 0}
+.ai-message-text h1,.ai-message-text h2,.ai-message-text h3{color:var(--ai-text);margin:1rem 0 .4rem}
+.ai-message-text pre{border:1px solid #27344e;box-shadow:0 8px 22px rgba(12,20,40,.12)}
+.ai-message-text blockquote{border-left:3px solid #7778ed;padding:.3rem .9rem;color:var(--ai-muted);margin:.7rem 0}
+.ai-message{animation:aiMessageIn .22s ease-out}
+@keyframes aiMessageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.ai-orb{background:linear-gradient(145deg,#8b8dfb,#4548c5);box-shadow:0 12px 32px #5b5ce244}
+.ai-send{background:linear-gradient(145deg,#7778ed,#4548c5);box-shadow:0 5px 14px #5558d833}
+.ai-send:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.ai-new{background:var(--ai-panel);color:var(--ai-text);border-color:var(--ai-border)}
+.ai-side-foot{border-color:var(--ai-border)}
+.ai-compose-wrap{background:linear-gradient(180deg,transparent,var(--ai-bg) 16%)}
+.ai-disclaimer{color:var(--ai-muted)}
+.ai-compose select{color:var(--ai-muted)}
+.ai-chat-menu{color:var(--ai-muted)}
+.ai-message-text code{color:#a33c70}
+.ai-workspace[data-theme="dark"]{
+ --ai-bg:#111827;--ai-panel:#182235;--ai-sidebar:#0d1524;--ai-border:#29364c;
+ --ai-text:#e8edf8;--ai-muted:#a1aec3;--ai-hover:#25314a;--ai-code:#080e19;
+ --ai-shadow:0 18px 55px rgba(0,0,0,.28);
+ color:var(--ai-text);
+}
+.ai-workspace[data-theme="dark"] .ai-message-text{color:#e1e8f5}
+.ai-workspace[data-theme="dark"] .ai-avatar.user{background:#29385c;color:#cdd8ff}
+.ai-workspace[data-theme="dark"] .ai-avatar.bot{background:linear-gradient(145deg,#7778ed,#4548c5)}
+.ai-workspace[data-theme="dark"] .ai-message-text code{background:#29364b;color:#ffd2e8}
+.ai-workspace[data-theme="dark"] .ai-compose textarea{background:transparent;color:#edf2ff}
+.ai-workspace[data-theme="dark"] .ai-compose select{background:transparent;color:#c2cce0}
+.ai-workspace[data-theme="dark"] .ai-error{background:#3a2029;color:#ffdce2;border-color:#69404a}
+.ai-workspace[data-theme="dark"] .ai-mini-btn:hover{background:#29364b;color:#edf2ff}
+.ai-workspace[data-theme="dark"] .ai-stop{background:#202b3f;border-color:#39465c;color:#ffb8c2}
+.ai-workspace[data-theme="dark"] .ai-theme-toggle{background:#182235;color:#edf2ff}
+.ai-workspace[data-theme="dark"] .ai-message-text a{color:#aeb2ff}
+@media(prefers-reduced-motion:reduce){.ai-message,.ai-send{animation:none;transition:none}}
+
 </style>
 
 <div class="ai-workspace">
@@ -107,7 +170,12 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
                 <button class="ai-mobile-menu" id="openSidebar" type="button" aria-label="Open chat history">☰</button>
                 <span class="ai-top-title" id="activeTitle">{% if active_conversation %}{{ active_conversation.title }}{% else %}New conversation{% endif %}</span>
             </div>
-            <span class="ai-model-pill">✦ Gemini AI · Placement mentor</span>
+            <div class="ai-top-actions">
+                <span class="ai-model-pill">✦ Gemini AI · Placement mentor</span>
+                <button type="button" class="ai-theme-toggle" id="themeToggle" aria-label="Switch colour theme" title="Switch theme">
+                    <span id="themeIcon">☾</span><span id="themeLabel">Dark mode</span>
+                </button>
+            </div>
         </header>
 
         <div class="ai-thread" id="chatThread">
@@ -180,6 +248,27 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
     const titleNode = document.getElementById("activeTitle");
     const errorBox = document.getElementById("errorBox");
     const sidebar = document.getElementById("aiSidebar");
+    const workspace = document.querySelector(".ai-workspace");
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+    const themeLabel = document.getElementById("themeLabel");
+
+    function applyTheme(theme) {
+        const selected = theme === "dark" ? "dark" : "light";
+        workspace.dataset.theme = selected;
+        themeIcon.textContent = selected === "dark" ? "☀" : "☾";
+        themeLabel.textContent = selected === "dark" ? "Light mode" : "Dark mode";
+        themeToggle.setAttribute("aria-label", selected === "dark" ? "Switch to light mode" : "Switch to dark mode");
+    }
+    let savedTheme = "light";
+    try { savedTheme = localStorage.getItem("placement-ai-theme") || "light"; } catch (_) {}
+    applyTheme(savedTheme);
+    themeToggle.addEventListener("click", () => {
+        const nextTheme = workspace.dataset.theme === "dark" ? "light" : "dark";
+        applyTheme(nextTheme);
+        try { localStorage.setItem("placement-ai-theme", nextTheme); } catch (_) {}
+    });
+
     let conversationId = {% if active_conversation %}{{ active_conversation.id }}{% else %}null{% endif %};
     let controller = null;
     let sending = false;
