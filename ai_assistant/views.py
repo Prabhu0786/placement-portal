@@ -17,7 +17,7 @@ from content.models import ContentStatus, Resource
 logger = logging.getLogger(__name__)
 
 MAX_MESSAGE_LENGTH = 6000
-MAX_CONTEXT_MESSAGES = 24
+MAX_CONTEXT_MESSAGES = 8
 
 SYSTEM_INSTRUCTIONS = """
 You are the AI Placement Assistant in a university placement preparation portal.
@@ -216,7 +216,10 @@ def send_message(request):
     conversation.save()
 
     api_key = os.getenv("GEMINI_API_KEY")
-    model_name = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+    # Flash-Lite is optimized for low-latency, high-throughput chat.
+    # Vercel environment variables can override these defaults.
+    model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+    fallback_model = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-3.8-flash")
     if not api_key:
         return JsonResponse({"error": "AI service is not configured. Please contact the administrator."}, status=503)
 
@@ -257,19 +260,70 @@ def send_message(request):
     def stream_answer():
         client = None
         collected = []
+        last_error = None
         try:
+            retry_options = types.HttpRetryOptions(
+                attempts=2,
+                initial_delay=0.5,
+                max_delay=2.0,
+                exp_base=2.0,
+                jitter=0.25,
+                http_status_codes=[408, 429, 500, 502, 503, 504],
+            )
             client = genai.Client(
                 api_key=api_key,
-                http_options=types.HttpOptions(timeout=60000),
+                http_options=types.HttpOptions(
+                    timeout=45000,
+                    retry_options=retry_options,
+                ),
             )
-            for chunk in client.models.generate_content_stream(
-                model=model_name,
-                contents=prompt,
-            ):
-                piece = getattr(chunk, "text", None)
-                if piece:
-                    collected.append(piece)
-                    yield piece
+
+            model_candidates = [model_name]
+            if fallback_model and fallback_model != model_name:
+                model_candidates.append(fallback_model)
+
+            generated = False
+            for candidate in model_candidates:
+                try:
+                    stream = client.models.generate_content_stream(
+                        model=candidate,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            max_output_tokens=1400,
+                            temperature=0.4,
+                        ),
+                    )
+                    for chunk in stream:
+                        piece = getattr(chunk, "text", None)
+                        if piece:
+                            collected.append(piece)
+                            yield piece
+
+                    generated = True
+                    if candidate != model_name:
+                        logger.warning("AI response completed using fallback model %s", candidate)
+                    break
+
+                except Exception as exc:
+                    last_error = exc
+                    status_code = (
+                        getattr(exc, "code", None)
+                        or getattr(exc, "status_code", None)
+                    )
+                    logger.warning(
+                        "Gemini model %s failed before completion (status=%s): %s",
+                        candidate, status_code, str(exc)[:500],
+                        exc_info=True,
+                    )
+                    if collected:
+                        raise
+                    if status_code not in {408, 429, 500, 502, 503, 504}:
+                        raise
+                    continue
+
+            if not generated and not collected:
+                raise last_error or RuntimeError("No Gemini model produced a response.")
+
             final_text = "".join(collected).strip()
             if final_text:
                 if resource_footer:
@@ -289,8 +343,9 @@ def send_message(request):
                     content=fallback_text,
                 )
                 yield fallback_text
-        except Exception:
-            logger.exception("Streaming Gemini response failed.")
+
+        except Exception as exc:
+            logger.exception("Gemini streaming request failed.")
             if collected:
                 partial = "".join(collected)
                 Message.objects.create(
@@ -298,9 +353,26 @@ def send_message(request):
                     role=Message.Role.ASSISTANT,
                     content=partial,
                 )
-                yield "\n\n[Response interrupted. Please try again if anything is missing.]"
+                yield "\n\n[The response was interrupted. Please try again if anything is missing.]"
             else:
-                error_text = "The AI service is busy or unavailable. Please try again in a moment."
+                status_code = (
+                    getattr(exc, "code", None)
+                    or getattr(exc, "status_code", None)
+                )
+                if status_code == 429:
+                    error_text = (
+                        "The AI service has reached its current usage limit. "
+                        "Please try again later."
+                    )
+                elif status_code in {500, 502, 503, 504, 408}:
+                    error_text = (
+                        "The AI service is temporarily busy. Please try again in a moment."
+                    )
+                else:
+                    error_text = (
+                        "The AI service could not complete this request. "
+                        "Please try again or contact the portal administrator."
+                    )
                 Message.objects.create(
                     conversation=conversation,
                     role=Message.Role.ASSISTANT,
