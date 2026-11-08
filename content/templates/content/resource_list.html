@@ -4,8 +4,8 @@
 {% block content %}
 <h1>Learning resources</h1>
 <p class="muted">
-  Explore placement-preparation videos, notes, articles and useful links.
-  Use the filters to find resources in Hindi or English.
+  Search your portal library and external educational sources for placement preparation,
+  interviews, programming tutorials, videos and open-access PDFs.
 </p>
 
 <div class="card">
@@ -20,63 +20,98 @@
       </div>
     {% endfor %}
     <div class="field">
-      <button class="btn" type="submit">Apply filters</button>
+      <label for="search_scope">Search sources</label>
+      <select id="search_scope" name="search_scope">
+        {% for value, label in search_scopes.items %}
+          <option value="{{ value }}" {% if search_scope == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <button class="btn" type="submit">Search resources</button>
       <a class="btn secondary" href="{% url 'resource_list' %}">Clear filters</a>
     </div>
   </form>
 </div>
 
-{% if page.object_list %}
-  <p class="muted">
-    {{ page.paginator.count }} resource{{ page.paginator.count|pluralize }} found.
-  </p>
+{% if search_query and search_scope != "internal" %}
+  <section style="margin-top:22px">
+    <div class="row" style="margin-bottom:12px">
+      <div>
+        <span class="tag">EXTERNAL SEARCH</span>
+        <h2 style="margin:7px 0 0">Web results for “{{ search_query }}”</h2>
+      </div>
+      <span class="tag">External learning sources</span>
+    </div>
 
-  {% for r in page.object_list %}
-    <div class="card">
-      <div class="row">
-        <div>
-          <h2 style="margin-bottom: 8px;">{{ r.title }}</h2>
-
-          <span class="tag">{{ r.topic.subject }} / {{ r.topic.name }}</span>
-          <span class="tag">{{ r.topic.get_difficulty_display }}</span>
-          <span class="tag">{{ r.get_type_display }}</span>
-
-          {% if r.language == "unknown" %}
-            <span class="tag">Language not specified</span>
-          {% else %}
-            <span class="tag">{{ r.get_language_display }}</span>
-          {% endif %}
-
-          {% if r.is_auto_imported %}
-            <span class="tag">Automatically added</span>
-          {% endif %}
-
-          {% if r.company %}
-            <span class="tag">{{ r.company.name }}</span>
-          {% endif %}
-
-          <div class="muted" style="margin-top: 8px;">
-            {% if r.source %}Source: {{ r.source }}. {% endif %}
-            Updated {{ r.updated_at|date:"j M Y" }}
+    {% if external_error %}
+      <div class="card">
+        <p class="muted">{{ external_error }}</p>
+      </div>
+    {% elif external_results %}
+      {% for result in external_results %}
+        <article class="card">
+          <div class="row" style="align-items:flex-start;gap:16px">
+            <div style="flex:1;min-width:220px">
+              <span class="tag">{{ result.type }}</span>
+              <h3 style="margin:8px 0">{{ result.title }}</h3>
+              <p class="muted" style="margin:0 0 8px">{{ result.snippet }}</p>
+              <small class="muted">{{ result.source }}</small>
+            </div>
+            <a class="btn secondary" href="{{ result.url }}" target="_blank" rel="noopener noreferrer">Open source ↗</a>
           </div>
-        </div>
+        </article>
+      {% endfor %}
+    {% else %}
+      <div class="card"><p class="muted">No live results were returned. You can still use the source search links below by changing the source filter or trying a broader keyword.</p></div>
+    {% endif %}
+  </section>
+{% endif %}
 
-        {% if r.url %}
-          <a class="btn"
-             href="{{ r.url }}"
-             target="_blank"
-             rel="noopener noreferrer">
-            Open resource
-          </a>
-        {% endif %}
+{% if search_scope == "all" or search_scope == "internal" %}
+  <section style="margin-top:24px">
+    <div class="row" style="margin-bottom:12px">
+      <div>
+        <span class="tag">PORTAL LIBRARY</span>
+        <h2 style="margin:7px 0 0">Resources from your portal</h2>
       </div>
     </div>
-  {% endfor %}
 
-  {% include "content/_pager.html" %}
-{% else %}
-  <div class="card">
-    <p class="muted">No published resources match your filters yet.</p>
-  </div>
+    {% if page.object_list %}
+      <p class="muted">
+        {{ page.paginator.count }} resource{{ page.paginator.count|pluralize }} found.
+      </p>
+
+      {% for r in page.object_list %}
+        <article class="card">
+          <div class="row" style="align-items:flex-start;gap:16px">
+            <div style="flex:1;min-width:220px">
+              <h3 style="margin-bottom:8px">{{ r.title }}</h3>
+              <span class="tag">{{ r.topic.subject }} / {{ r.topic.name }}</span>
+              <span class="tag">{{ r.topic.get_difficulty_display }}</span>
+              <span class="tag">{{ r.get_type_display }}</span>
+              {% if r.language == "unknown" %}
+                <span class="tag">Language not specified</span>
+              {% else %}
+                <span class="tag">{{ r.get_language_display }}</span>
+              {% endif %}
+              {% if r.is_auto_imported %}<span class="tag">Automatically added</span>{% endif %}
+              {% if r.company %}<span class="tag">{{ r.company.name }}</span>{% endif %}
+              <div class="muted" style="margin-top:8px">
+                {% if r.source %}Source: {{ r.source }}. {% endif %}
+                Updated {{ r.updated_at|date:"j M Y" }}
+              </div>
+            </div>
+            {% if r.url %}
+              <a class="btn" href="{{ r.url }}" target="_blank" rel="noopener noreferrer">Open resource ↗</a>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+      {% include "content/_pager.html" %}
+    {% else %}
+      <div class="card"><p class="muted">No published portal resources match your filters yet.</p></div>
+    {% endif %}
+  </section>
 {% endif %}
 {% endblock %}

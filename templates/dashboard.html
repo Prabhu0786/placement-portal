@@ -1,0 +1,585 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Dashboard - Placement Prep Portal{% endblock %}
+
+{% block content %}
+
+{% if user.is_student %}
+
+  <!-- WELCOME BANNER -->
+  <section class="dash-hero" style="background:linear-gradient(120deg,#172554,#293b83 65%,#5b5ce2);color:#fff;border-radius:22px;padding:clamp(22px,4vw,34px);margin-bottom:20px;position:relative;overflow:hidden;box-shadow:0 18px 38px #1d2d6840">
+
+    <div style="position:relative;z-index:1;max-width:680px">
+      <div style="font-size:.75rem;letter-spacing:.13em;text-transform:uppercase;color:#c7d2fe;font-weight:800;margin-bottom:9px">
+        Student workspace
+      </div>
+
+      <h1 style="color:#fff;margin-bottom:8px">
+        Welcome back, {{ user.get_full_name|default:user.username }} 👋
+      </h1>
+
+      <p style="color:#e0e7ff;margin:0;max-width:580px">
+        Your next opportunity starts with today's preparation.
+        Keep learning, practising and moving forward.
+      </p>
+    </div>
+
+    <div aria-hidden="true" style="position:absolute;width:230px;height:230px;border-radius:50%;background:#ffffff0c;right:-45px;top:-90px"></div>
+    <div aria-hidden="true" style="position:absolute;width:150px;height:150px;border-radius:50%;background:#ffffff0c;right:95px;bottom:-110px"></div>
+
+  </section>
+
+  <!-- UNIFIED RESOURCE SEARCH -->
+  <section class="card" style="border:1px solid #dfe0ff;background:linear-gradient(135deg,#fff,#f7f7ff);margin-bottom:22px">
+    <span class="tag">SMART RESOURCE SEARCH</span>
+    <h2 style="margin:8px 0">Find placement resources faster</h2>
+    <p class="muted">Search portal materials and external tutorials, interview preparation, videos and PDFs.</p>
+    <form method="get" action="{% url 'resource_list' %}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <input type="search" name="q" placeholder="Try Java interview questions, DSA, aptitude, resume PDF..." required maxlength="200" aria-label="Search learning resources" style="flex:1;min-width:220px;padding:12px;border:1px solid #d7dbea;border-radius:10px">
+      <input type="hidden" name="search_scope" value="all">
+      <button class="btn" type="submit">Search resources →</button>
+    </form>
+    <p class="muted" style="font-size:.85rem;margin:10px 0 0">Search your Resource Hub, YouTube, GitHub and educational websites. No Google API credentials are required.</p>
+  </section>
+
+
+  <!-- REMINDERS -->
+  {% if reminders %}
+
+  <section class="card">
+
+    <div class="row">
+      <div>
+        <span class="tag">DON'T FORGET</span>
+        <h2 style="margin:8px 0 0">Your reminders</h2>
+      </div>
+
+      <a class="btn secondary small" href="{% url 'plan' %}">
+        Open plan →
+      </a>
+    </div>
+
+    <ul class="plain" style="margin-top:10px">
+      {% for item in reminders %}
+        <li>
+          {{ item.text }}
+          <a href="{% url 'plan' %}">View plan →</a>
+        </li>
+      {% endfor %}
+    </ul>
+
+  </section>
+
+  {% endif %}
+
+
+  <!-- RECOMMENDATIONS -->
+  {% if top_recommendations %}
+
+  <section class="card" style="border:1px solid #dfe0ff;background:linear-gradient(135deg,#fff,#f7f7ff)">
+
+    <div class="row">
+      <div>
+        <span class="tag">PERSONALISED FOR YOU</span>
+
+        <h2 style="margin:8px 0 0">
+          Recommended next
+        </h2>
+
+        <p class="muted" style="margin:4px 0 0">
+          Focus on these topics to strengthen your preparation.
+        </p>
+      </div>
+
+      <span style="font-size:1.7rem">✦</span>
+    </div>
+
+    <ul class="plain" style="margin-top:10px">
+      {% for rec in top_recommendations %}
+        <li>
+          <strong>{{ rec.topic.name }}</strong>
+          <span class="muted"> — {{ rec.reason }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <p style="margin:16px 0 0">
+      <a class="btn" href="{% url 'recommendations' %}">
+        View all recommendations →
+      </a>
+    </p>
+
+  </section>
+
+  {% endif %}
+
+
+  <!-- PERFORMANCE OVERVIEW -->
+  <section class="card">
+
+    <div class="row">
+      <div>
+        <span class="tag">YOUR PERFORMANCE</span>
+
+        <h2 style="margin:8px 0 0">
+          Preparation overview
+        </h2>
+
+        <p class="muted">
+          A summary of your completed practice and assessment attempts.
+        </p>
+      </div>
+
+      <span style="font-size:1.8rem">📊</span>
+    </div>
+
+
+    {% if overview.has_data %}
+
+      <!-- PERFORMANCE CARDS -->
+      <div class="grid" style="margin-top:18px">
+
+        <article class="card">
+          <span class="muted">Attempts with responses</span>
+          <h2 style="font-size:2rem;color:#5556d9">
+            {{ overview.summary.attempts }}
+          </h2>
+        </article>
+
+        <article class="card">
+          <span class="muted">Questions presented</span>
+          <h2 style="font-size:2rem;color:#5556d9">
+            {{ overview.summary.presented }}
+          </h2>
+        </article>
+
+        <article class="card">
+          <span class="muted">Questions answered</span>
+          <h2 style="font-size:2rem;color:#5556d9">
+            {{ overview.summary.answered }}
+          </h2>
+        </article>
+
+        <article class="card">
+          <span class="muted">Accuracy</span>
+
+          <h2 style="font-size:2rem;color:#5556d9">
+            {% if overview.summary.accuracy != None %}
+              {{ overview.summary.accuracy }}%
+            {% else %}
+              —
+            {% endif %}
+          </h2>
+
+          <small class="muted">
+            Automatically checked answers
+          </small>
+        </article>
+
+        <article class="card">
+          <span class="muted">Time spent</span>
+
+          <h2 style="font-size:2rem;color:#5556d9">
+            {{ overview.summary.minutes }}
+          </h2>
+
+          <small class="muted">Minutes</small>
+        </article>
+
+        <article class="card">
+          <span class="muted">Preparation status</span>
+
+          <h2 style="font-size:1.5rem;color:#5556d9">
+            {{ overview.readiness.label }}
+          </h2>
+        </article>
+
+      </div>
+
+
+      <!-- PREPARATION SNAPSHOT -->
+      <div style="margin-top:22px">
+
+        <h2>Preparation snapshot</h2>
+
+        <p>
+          <strong>Topic coverage:</strong>
+          {{ overview.readiness.covered }} /
+          {{ overview.readiness.available }} topics
+        </p>
+
+        <div class="progress"
+             role="progressbar"
+             aria-valuenow="{{ overview.readiness.coverage }}"
+             aria-valuemin="0"
+             aria-valuemax="100">
+
+          <span style="width:{{ overview.readiness.coverage }}%"></span>
+
+        </div>
+
+        <p class="muted" style="margin-top:12px">
+          You practised in {{ overview.readiness.consistency }}
+          of the last four weeks.
+        </p>
+
+      </div>
+
+
+      <!-- WEEKLY PERFORMANCE -->
+      <div style="margin-top:25px">
+
+        <h2>Weekly performance</h2>
+
+        <p class="muted">
+          Accuracy trend over the last eight weeks.
+        </p>
+
+        {% for week in overview.series %}
+
+          <div style="margin:15px 0">
+
+            <div class="row">
+              <strong>{{ week.label }}</strong>
+
+              <strong>
+                {% if week.accuracy != None %}
+                  {{ week.accuracy }}%
+                {% else %}
+                  No data
+                {% endif %}
+              </strong>
+            </div>
+
+            <div class="progress">
+              <span style="width:{{ week.accuracy|default_if_none:0 }}%"></span>
+            </div>
+
+            <small class="muted">
+              {{ week.attempts }} attempts ·
+              {{ week.presented }} questions
+            </small>
+
+          </div>
+
+        {% endfor %}
+
+      </div>
+
+
+      <!-- TOPIC-WISE PERFORMANCE -->
+      <div style="margin-top:25px">
+
+        <h2>Topic-wise performance</h2>
+
+        {% for topic in overview.topics %}
+
+          <div style="padding:14px 0;border-bottom:1px solid #e8eaf0">
+
+            <div class="row">
+              <strong>{{ topic.topic.name }}</strong>
+
+              <span class="tag">
+                {{ topic.level_label }}
+              </span>
+            </div>
+
+            <p class="muted" style="margin:5px 0">
+
+              {% if topic.accuracy != None %}
+                Accuracy: {{ topic.accuracy }}%
+              {% else %}
+                Accuracy: Not enough data
+              {% endif %}
+
+              · {{ topic.auto }} checked answers
+              · {{ topic.attempts }} attempts
+
+            </p>
+
+            {% if topic.accuracy != None %}
+
+              <div class="progress">
+                <span style="width:{{ topic.accuracy }}%"></span>
+              </div>
+
+            {% endif %}
+
+          </div>
+
+        {% empty %}
+
+          <p class="muted">
+            No topic-wise data available yet.
+          </p>
+
+        {% endfor %}
+
+      </div>
+
+
+      <p style="margin-top:18px">
+        <a class="btn" href="{% url 'progress' %}">
+          View detailed progress →
+        </a>
+      </p>
+
+
+    {% else %}
+
+      <!-- EMPTY PERFORMANCE STATE -->
+      <div style="text-align:center;padding:25px 10px">
+
+        <div style="font-size:2.5rem">🚀</div>
+
+        <h2>Start your preparation journey</h2>
+
+        <p class="muted">
+          Complete a practice session or timed assessment.
+          Your performance insights will appear here.
+        </p>
+
+        <a class="btn" href="{% url 'practice_home' %}">
+          Start practising →
+        </a>
+
+      </div>
+
+    {% endif %}
+
+  </section>
+
+
+  <!-- PROFILE COMPLETION -->
+  <section class="card">
+
+    <div class="row" style="margin-bottom:12px">
+
+      <div>
+        <span class="tag">PROFILE STRENGTH</span>
+
+        <h2 style="margin:7px 0 0">
+          Your profile is {{ completeness }}% complete
+        </h2>
+      </div>
+
+      <strong style="font-size:1.8rem;color:#5556d9">
+        {{ completeness }}%
+      </strong>
+
+    </div>
+
+    <div class="progress"
+         role="progressbar"
+         aria-valuenow="{{ completeness }}"
+         aria-valuemin="0"
+         aria-valuemax="100">
+
+      <span style="width:{{ completeness }}%"></span>
+
+    </div>
+
+    <ul class="plain" style="margin:12px 0">
+
+      {% for label, done in checklist %}
+
+        <li>
+          {% if done %}
+            <span style="color:#13845b;font-weight:800">✓</span>
+          {% else %}
+            <span style="color:#9aa4b5">○</span>
+          {% endif %}
+
+          {{ label }}
+        </li>
+
+      {% endfor %}
+
+    </ul>
+
+    <a class="btn secondary" href="{% url 'profile' %}">
+      Improve my profile →
+    </a>
+
+  </section>
+
+
+  <!-- STUDENT TOOLKIT -->
+  <div class="row" style="margin:24px 0 13px">
+
+    <div>
+      <span class="tag">YOUR TOOLKIT</span>
+
+      <h2 style="font-size:1.35rem;margin:7px 0 0">
+        Everything you need to prepare
+      </h2>
+    </div>
+
+  </div>
+
+
+  <section class="grid">
+
+    <article class="card">
+      <div style="font-size:1.55rem;margin-bottom:8px">📚</div>
+
+      <h2>Resources</h2>
+
+      <p class="muted">
+        Study materials organised by subject, topic and difficulty.
+      </p>
+
+      <a class="btn secondary" href="{% url 'resource_list' %}">
+        Browse resources →
+      </a>
+    </article>
+
+
+    <article class="card">
+      <div style="font-size:1.55rem;margin-bottom:8px">🏢</div>
+
+      <h2>Companies</h2>
+
+      <p class="muted">
+        Explore eligibility, recruitment stages and previous questions.
+      </p>
+
+      <a class="btn secondary" href="{% url 'company_list' %}">
+        Explore companies →
+      </a>
+    </article>
+
+
+    <article class="card">
+      <div style="font-size:1.55rem;margin-bottom:8px">⚡</div>
+
+      <h2>Practice</h2>
+
+      <p class="muted">
+        Build confidence with coding, aptitude, verbal and technical questions.
+      </p>
+
+      <a class="btn secondary" href="{% url 'practice_home' %}">
+        Start practising →
+      </a>
+    </article>
+
+
+    <article class="card">
+      <div style="font-size:1.55rem;margin-bottom:8px">⏱️</div>
+
+      <h2>Timed assessments</h2>
+
+      <p class="muted">
+        Attempt mock tests with countdowns and detailed feedback.
+      </p>
+
+      <a class="btn secondary" href="{% url 'assessment_list' %}">
+        View assessments →
+      </a>
+    </article>
+
+
+    <article class="card">
+      <div style="font-size:1.55rem;margin-bottom:8px">📈</div>
+
+      <h2>Progress</h2>
+
+      <p class="muted">
+        Review accuracy, time, topic trends and weekly performance.
+      </p>
+
+      <a class="btn secondary" href="{% url 'progress' %}">
+        View my progress →
+      </a>
+    </article>
+
+
+    <article class="card">
+      <div style="font-size:1.55rem;margin-bottom:8px">🗓️</div>
+
+      <h2>Weekly plan</h2>
+
+      <p class="muted">
+        Set manageable goals and track your preparation consistently.
+      </p>
+
+      <a class="btn secondary" href="{% url 'plan' %}">
+        Open my plan →
+      </a>
+    </article>
+
+  </section>
+
+
+{% elif user.role_name %}
+
+  <!-- FACULTY / TPO DASHBOARD -->
+  <section class="card">
+
+    <span class="tag">WORKSPACE</span>
+
+    <h1 style="margin-top:10px">
+      {{ user.role_name }} dashboard
+    </h1>
+
+    <p class="muted">
+      Access the tools and resources available for your role.
+    </p>
+
+    {% if user.is_tpo or user.is_faculty %}
+
+      <p>
+        <a class="btn" href="{% url 'manage_home' %}">
+          Manage content →
+        </a>
+
+        {% if user.is_tpo %}
+
+          <a class="btn secondary" href="{% url 'reports_home' %}">
+            Student reports
+          </a>
+
+        {% endif %}
+      </p>
+
+    {% endif %}
+
+    {% if user.is_staff %}
+
+      <p>
+        <a class="btn" href="/admin/">
+          Open admin panel →
+        </a>
+      </p>
+
+    {% endif %}
+
+  </section>
+
+
+{% else %}
+
+  <!-- NO ROLE ASSIGNED -->
+  <section class="card">
+
+    <div class="alert warning">
+      No role is assigned to this account yet.
+      Please ask an administrator to assign one.
+    </div>
+
+    {% if user.is_staff %}
+
+      <p>
+        <a class="btn" href="/admin/">
+          Open admin panel →
+        </a>
+      </p>
+
+    {% endif %}
+
+  </section>
+
+{% endif %}
+
+{% endblock %}

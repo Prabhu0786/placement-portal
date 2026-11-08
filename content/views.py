@@ -1,9 +1,17 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+import hashlib
+import json
+import logging
+import os
 from django.views.decorators.http import require_POST
 
 from accounts.permissions import role_required
@@ -16,10 +24,153 @@ PUBLISHED = ContentStatus.PUBLISHED
 
 
 # ---------------------------------------------------------------- student pages
+RESOURCE_SEARCH_SCOPES = {
+    "all": "All sources",
+    "internal": "Portal resources",
+    "web": "Educational websites",
+    "pdf": "PDF documents",
+    "youtube": "YouTube videos",
+    "github": "GitHub repositories",
+}
+
+
+def _external_search_links(query, scope="all"):
+    """Return useful external search destinations without requiring Google credentials.
+
+    GitHub's public search API is unauthenticated (subject to its public rate limit).
+    YouTube Data API is used only when the portal already has YOUTUBE_API_KEY.
+    Other sources are linked to their own search pages; no scraping is performed.
+    """
+    from urllib.parse import quote_plus
+
+    q = query.strip()[:200]
+    encoded = quote_plus(q)
+    results = []
+
+    def add(title, url, source, result_type, snippet):
+        results.append({
+            "title": title,
+            "url": url,
+            "source": source,
+            "type": result_type,
+            "snippet": snippet,
+        })
+
+    if scope in {"all", "web"}:
+        sites = [
+            ("MDN Web Docs", f"https://developer.mozilla.org/en-US/search?q={encoded}", "Official web development documentation and tutorials."),
+            ("freeCodeCamp", f"https://www.freecodecamp.org/news/search/?query={encoded}", "Free programming tutorials, guides and projects."),
+            ("NPTEL", f"https://nptel.ac.in/courses?search={encoded}", "Academic courses and technical lectures."),
+            ("SWAYAM", f"https://swayam.gov.in/explorer?searchText={encoded}", "Online courses and learning materials."),
+            ("GeeksforGeeks", f"https://www.geeksforgeeks.org/?s={encoded}", "Programming, DSA and interview preparation articles."),
+        ]
+        for title, url, snippet in sites:
+            add(f"Search {title}: {q}", url, title, "Educational website", snippet)
+
+    if scope in {"all", "pdf"}:
+        add(
+            f"Find open-access PDF resources: {q}",
+            f"https://www.google.com/search?q={quote_plus(q + ' filetype:pdf')}",
+            "Google web search", "PDF search", "Opens a Google search for publicly indexed PDF documents. Check the publisher's permissions before downloading or sharing."
+        )
+
+    if scope in {"all", "youtube"}:
+        youtube_key = os.getenv("YOUTUBE_API_KEY", "").strip()
+        youtube_cache_key = "portal_youtube_search_" + hashlib.sha256(q.encode("utf-8")).hexdigest()
+        youtube_results = cache.get(youtube_cache_key)
+        if youtube_results is None and youtube_key:
+            params = urlencode({
+                "part": "snippet", "q": q, "type": "video", "maxResults": 5,
+                "safeSearch": "strict", "key": youtube_key,
+            })
+            request = Request(
+                "https://www.googleapis.com/youtube/v3/search?" + params,
+                headers={"User-Agent": "PlacementPrepPortal/1.0"},
+            )
+            try:
+                with urlopen(request, timeout=6) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
+                youtube_results = []
+                for item in payload.get("items", []):
+                    video_id = (item.get("id") or {}).get("videoId")
+                    snippet_data = item.get("snippet") or {}
+                    if not video_id:
+                        continue
+                    youtube_results.append({
+                        "title": snippet_data.get("title") or "YouTube video",
+                        "url": "https://www.youtube.com/watch?v=" + video_id,
+                        "source": "YouTube",
+                        "type": "YouTube video",
+                        "snippet": snippet_data.get("description", "")[:300],
+                    })
+                cache.set(youtube_cache_key, youtube_results, 60 * 10)
+            except (HTTPError, URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError) as exc:
+                logging.getLogger(__name__).warning("YouTube search failed (%s)", type(exc).__name__)
+                youtube_results = []
+        if youtube_results:
+            results.extend(youtube_results)
+        else:
+            add(
+                f"Search YouTube videos: {q}",
+                f"https://www.youtube.com/results?search_query={encoded}",
+                "YouTube", "YouTube search", "Open YouTube's search page for relevant tutorials and interview videos."
+            )
+
+    if scope in {"all", "github"}:
+        github_cache_key = "portal_github_search_" + hashlib.sha256(q.encode("utf-8")).hexdigest()
+        github_results = cache.get(github_cache_key)
+        if github_results is None:
+            params = urlencode({"q": q + " interview OR placement OR dsa", "sort": "stars", "order": "desc", "per_page": 5})
+            request = Request(
+                "https://api.github.com/search/repositories?" + params,
+                headers={"Accept": "application/vnd.github+json", "User-Agent": "PlacementPrepPortal/1.0"},
+            )
+            try:
+                with urlopen(request, timeout=6) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
+                github_results = []
+                for item in payload.get("items", []):
+                    github_results.append({
+                        "title": item.get("full_name") or "GitHub repository",
+                        "url": item.get("html_url") or "https://github.com",
+                        "source": "GitHub",
+                        "type": "GitHub repository",
+                        "snippet": (item.get("description") or "Open-source learning repository.")[:300],
+                    })
+                cache.set(github_cache_key, github_results, 60 * 10)
+            except HTTPError as exc:
+                logging.getLogger(__name__).warning("GitHub search returned HTTP %s", exc.code)
+                github_results = []
+            except (URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError) as exc:
+                logging.getLogger(__name__).warning("GitHub search failed (%s)", type(exc).__name__)
+                github_results = []
+        if github_results:
+            results.extend(github_results)
+        else:
+            add(
+                f"Search GitHub repositories: {q}",
+                f"https://github.com/search?q={encoded}&type=repositories",
+                "GitHub", "GitHub search", "Find open-source roadmaps, interview questions and practice projects."
+            )
+
+    # Remove duplicate destinations and cap the number of external cards.
+    unique = []
+    seen = set()
+    for item in results:
+        if item["url"] not in seen:
+            seen.add(item["url"])
+            unique.append(item)
+    return unique[:15]
+
+
 @login_required
 def resource_list(request):
-    """UC-03: browse published resources by subject, topic and difficulty (BR-4)."""
+    """Browse portal resources and search external educational sources."""
     form = ResourceFilterForm(request.GET)
+    scope = request.GET.get("search_scope", "all").strip().lower()
+    if scope not in RESOURCE_SEARCH_SCOPES:
+        scope = "all"
+
     resources = (
         Resource.objects.filter(status=PUBLISHED)
         .select_related("topic", "company")
@@ -29,7 +180,10 @@ def resource_list(request):
         data = form.cleaned_data
         if data["q"]:
             resources = resources.filter(
-                Q(title__icontains=data["q"]) | Q(source__icontains=data["q"])
+                Q(title__icontains=data["q"])
+                | Q(source__icontains=data["q"])
+                | Q(topic__subject__icontains=data["q"])
+                | Q(topic__name__icontains=data["q"])
             )
         if data["subject"]:
             resources = resources.filter(topic__subject=data["subject"])
@@ -41,15 +195,36 @@ def resource_list(request):
             resources = resources.filter(type=data["type"])
         if data["language"]:
             resources = resources.filter(language=data["language"])
+
+    query = form.cleaned_data.get("q", "").strip() if form.is_valid() else ""
+    if scope in {"web", "pdf", "youtube", "github"}:
+        # External-only tabs still preserve the portal filters in the UI,
+        # but do not show internal records in the result list.
+        resources = resources.none()
+
     page = Paginator(resources, 10).get_page(request.GET.get("page"))
+    external_results = []
+    external_error = ""
+    if query and scope != "internal":
+        external_results = _external_search_links(query, scope)
+
     params = request.GET.copy()
     params.pop("page", None)
     return render(
         request,
         "content/resource_list.html",
-        {"form": form, "page": page, "querystring": params.urlencode()},
+        {
+            "form": form,
+            "page": page,
+            "querystring": params.urlencode(),
+            "search_query": query,
+            "search_scope": scope,
+            "search_scopes": RESOURCE_SEARCH_SCOPES,
+            "external_results": external_results,
+            "external_error": external_error,
+            "external_search_configured": True,
+        },
     )
-
 
 @login_required
 def company_list(request):
