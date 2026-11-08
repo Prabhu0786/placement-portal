@@ -56,6 +56,11 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
 .ai-compose-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ai-compose-tools{display:flex;align-items:center;gap:8px}
 .ai-compose select{border:0;background:transparent;color:#69748d;font-size:.78rem;padding:5px;max-width:130px}
+.ai-upload-btn{border:1px solid #e1e5ef;background:#f8f9fd;color:#59647f;border-radius:9px;padding:7px 10px;cursor:pointer;font-size:.8rem}
+.ai-upload-btn:hover{border-color:#a8adf1;background:#f1f1ff}
+.ai-file-chip{display:none;align-items:center;gap:8px;margin:5px 7px 8px;padding:7px 10px;background:#f2f4fb;border-radius:9px;color:#53607b;font-size:.78rem}
+.ai-file-chip.visible{display:flex}
+.ai-file-chip button{border:0;background:transparent;cursor:pointer;color:#9b4050}
 .ai-send{width:37px;height:37px;border:0;border-radius:11px;background:#5558d8;color:#fff;font-size:1.1rem;cursor:pointer}
 .ai-send:disabled{opacity:.45;cursor:not-allowed}
 .ai-stop{border:1px solid #e3e5ee;background:#fff;color:#a43c4b;border-radius:10px;padding:8px 11px;cursor:pointer;font:inherit;font-size:.8rem}
@@ -78,69 +83,6 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
  .ai-message{gap:9px;margin-bottom:21px}
  .ai-avatar{width:28px;height:28px;flex-basis:28px}
 }
-
-/* Premium theme system */
-.ai-workspace{
- --ai-bg:#ffffff;--ai-panel:#ffffff;--ai-sidebar:#f7f8fc;--ai-border:#e6e9f2;
- --ai-text:#263452;--ai-muted:#778198;--ai-hover:#eef1ff;--ai-code:#111a2e;
- --ai-shadow:0 18px 50px rgba(25,42,85,.10);
- background:var(--ai-bg);border-color:var(--ai-border);box-shadow:var(--ai-shadow);
-}
-.ai-sidebar{background:var(--ai-sidebar);border-color:var(--ai-border)}
-.ai-main{background:var(--ai-bg)}
-.ai-topbar{border-color:var(--ai-border)}
-.ai-top-title,.ai-message-text{color:var(--ai-text)}
-.ai-side-brand,.ai-welcome h1{color:var(--ai-text)}
-.ai-chat-link{color:var(--ai-muted)}
-.ai-chat-link:hover,.ai-chat-link.active{background:var(--ai-hover)}
-.ai-prompt{background:var(--ai-panel);border-color:var(--ai-border);color:var(--ai-text)}
-.ai-prompt:hover{background:var(--ai-hover)}
-.ai-message-name,.ai-welcome p,.ai-prompt span{color:var(--ai-muted)}
-.ai-compose{background:var(--ai-panel);border-color:var(--ai-border)}
-.ai-compose textarea{color:var(--ai-text)}
-.ai-model-pill{background:var(--ai-hover);color:var(--ai-text)}
-.ai-theme-toggle{border:1px solid var(--ai-border);background:var(--ai-panel);color:var(--ai-text);
- border-radius:10px;padding:8px 11px;cursor:pointer;font:inherit;font-size:.82rem;
- display:inline-flex;align-items:center;gap:7px;transition:.18s}
-.ai-theme-toggle:hover{background:var(--ai-hover)}
-.ai-top-actions{display:flex;align-items:center;gap:10px}
-.ai-message-text a{color:#6669df;text-decoration:underline;text-underline-offset:3px}
-.ai-message-text strong{font-weight:800}
-.ai-message-text ul,.ai-message-text ol{padding-left:1.4rem;margin:.5rem 0}
-.ai-message-text h1,.ai-message-text h2,.ai-message-text h3{color:var(--ai-text);margin:1rem 0 .4rem}
-.ai-message-text pre{border:1px solid #27344e;box-shadow:0 8px 22px rgba(12,20,40,.12)}
-.ai-message-text blockquote{border-left:3px solid #7778ed;padding:.3rem .9rem;color:var(--ai-muted);margin:.7rem 0}
-.ai-message{animation:aiMessageIn .22s ease-out}
-@keyframes aiMessageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.ai-orb{background:linear-gradient(145deg,#8b8dfb,#4548c5);box-shadow:0 12px 32px #5b5ce244}
-.ai-send{background:linear-gradient(145deg,#7778ed,#4548c5);box-shadow:0 5px 14px #5558d833}
-.ai-send:hover{filter:brightness(1.08);transform:translateY(-1px)}
-.ai-new{background:var(--ai-panel);color:var(--ai-text);border-color:var(--ai-border)}
-.ai-side-foot{border-color:var(--ai-border)}
-.ai-compose-wrap{background:linear-gradient(180deg,transparent,var(--ai-bg) 16%)}
-.ai-disclaimer{color:var(--ai-muted)}
-.ai-compose select{color:var(--ai-muted)}
-.ai-chat-menu{color:var(--ai-muted)}
-.ai-message-text code{color:#a33c70}
-.ai-workspace[data-theme="dark"]{
- --ai-bg:#111827;--ai-panel:#182235;--ai-sidebar:#0d1524;--ai-border:#29364c;
- --ai-text:#e8edf8;--ai-muted:#a1aec3;--ai-hover:#25314a;--ai-code:#080e19;
- --ai-shadow:0 18px 55px rgba(0,0,0,.28);
- color:var(--ai-text);
-}
-.ai-workspace[data-theme="dark"] .ai-message-text{color:#e1e8f5}
-.ai-workspace[data-theme="dark"] .ai-avatar.user{background:#29385c;color:#cdd8ff}
-.ai-workspace[data-theme="dark"] .ai-avatar.bot{background:linear-gradient(145deg,#7778ed,#4548c5)}
-.ai-workspace[data-theme="dark"] .ai-message-text code{background:#29364b;color:#ffd2e8}
-.ai-workspace[data-theme="dark"] .ai-compose textarea{background:transparent;color:#edf2ff}
-.ai-workspace[data-theme="dark"] .ai-compose select{background:transparent;color:#c2cce0}
-.ai-workspace[data-theme="dark"] .ai-error{background:#3a2029;color:#ffdce2;border-color:#69404a}
-.ai-workspace[data-theme="dark"] .ai-mini-btn:hover{background:#29364b;color:#edf2ff}
-.ai-workspace[data-theme="dark"] .ai-stop{background:#202b3f;border-color:#39465c;color:#ffb8c2}
-.ai-workspace[data-theme="dark"] .ai-theme-toggle{background:#182235;color:#edf2ff}
-.ai-workspace[data-theme="dark"] .ai-message-text a{color:#aeb2ff}
-@media(prefers-reduced-motion:reduce){.ai-message,.ai-send{animation:none;transition:none}}
-
 </style>
 
 <div class="ai-workspace">
@@ -170,12 +112,7 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
                 <button class="ai-mobile-menu" id="openSidebar" type="button" aria-label="Open chat history">☰</button>
                 <span class="ai-top-title" id="activeTitle">{% if active_conversation %}{{ active_conversation.title }}{% else %}New conversation{% endif %}</span>
             </div>
-            <div class="ai-top-actions">
-                <span class="ai-model-pill">✦ Gemini AI · Placement mentor</span>
-                <button type="button" class="ai-theme-toggle" id="themeToggle" aria-label="Switch colour theme" title="Switch theme">
-                    <span id="themeIcon">☾</span><span id="themeLabel">Dark mode</span>
-                </button>
-            </div>
+            <span class="ai-model-pill">✦ Gemini AI · Placement mentor</span>
         </header>
 
         <div class="ai-thread" id="chatThread">
@@ -209,7 +146,8 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
         <div class="ai-compose-wrap">
             <div class="ai-compose">
                 <textarea id="messageInput" rows="1" maxlength="6000" placeholder="Message Placement AI..." aria-label="Your message"></textarea>
-                <div class="ai-compose-bottom">
+                <div class="ai-file-chip" id="fileChip"><span id="fileName"></span><button type="button" id="removeFile" aria-label="Remove attachment">✕</button></div>
+            <div class="ai-compose-bottom">
                     <div class="ai-compose-tools">
                         <select id="modeSelect" aria-label="Assistant mode">
                             <option value="general">General</option>
@@ -218,6 +156,8 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
                             <option value="interview">Interview</option>
                             <option value="resume">Resume review</option>
                         </select>
+                        <button type="button" class="ai-upload-btn" id="uploadButton" title="Attach a resume or document">＋ Attach</button>
+                        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" hidden>
                         <select id="languageSelect" aria-label="Response language">
                             <option value="auto">Auto language</option>
                             <option value="english">English</option>
@@ -226,6 +166,7 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
                         </select>
                     </div>
                     <div style="display:flex;gap:7px;align-items:center">
+                        <button type="button" class="ai-stop" id="retryButton" hidden>↻ Retry</button>
                         <button type="button" class="ai-stop" id="stopButton" hidden>Stop</button>
                         <button type="button" class="ai-send" id="sendButton" aria-label="Send message">↑</button>
                     </div>
@@ -243,32 +184,19 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
     const input = document.getElementById("messageInput");
     const sendButton = document.getElementById("sendButton");
     const stopButton = document.getElementById("stopButton");
+    const retryButton = document.getElementById("retryButton");
+    const fileInput = document.getElementById("fileInput");
+    const uploadButton = document.getElementById("uploadButton");
+    const fileChip = document.getElementById("fileChip");
+    const fileNameNode = document.getElementById("fileName");
+    const removeFileButton = document.getElementById("removeFile");
+    let selectedFile = null;
+    let lastRequest = null;
     const thread = document.getElementById("chatThread");
     const list = document.getElementById("conversationList");
     const titleNode = document.getElementById("activeTitle");
     const errorBox = document.getElementById("errorBox");
     const sidebar = document.getElementById("aiSidebar");
-    const workspace = document.querySelector(".ai-workspace");
-    const themeToggle = document.getElementById("themeToggle");
-    const themeIcon = document.getElementById("themeIcon");
-    const themeLabel = document.getElementById("themeLabel");
-
-    function applyTheme(theme) {
-        const selected = theme === "dark" ? "dark" : "light";
-        workspace.dataset.theme = selected;
-        themeIcon.textContent = selected === "dark" ? "☀" : "☾";
-        themeLabel.textContent = selected === "dark" ? "Light mode" : "Dark mode";
-        themeToggle.setAttribute("aria-label", selected === "dark" ? "Switch to light mode" : "Switch to dark mode");
-    }
-    let savedTheme = "light";
-    try { savedTheme = localStorage.getItem("placement-ai-theme") || "light"; } catch (_) {}
-    applyTheme(savedTheme);
-    themeToggle.addEventListener("click", () => {
-        const nextTheme = workspace.dataset.theme === "dark" ? "light" : "dark";
-        applyTheme(nextTheme);
-        try { localStorage.setItem("placement-ai-theme", nextTheme); } catch (_) {}
-    });
-
     let conversationId = {% if active_conversation %}{{ active_conversation.id }}{% else %}null{% endif %};
     let controller = null;
     let sending = false;
@@ -371,19 +299,30 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
         list.querySelectorAll(".ai-chat-link").forEach(el => el.classList.remove("active"));
         list.prepend(row);
     }
-    async function sendMessage() {
+    async function sendMessage(requestOverride) {
         if (sending) return;
-        const message = input.value.trim();
-        if (!message) return;
+        const requestData = requestOverride || {
+            message: input.value.trim(),
+            file: selectedFile,
+            retry: false
+        };
+        const message = requestData.message;
+        if (!message && !requestData.file) return;
         clearError();
         sending = true;
+        retryButton.hidden = true;
         sendButton.disabled = true;
         input.disabled = true;
         const welcome = document.getElementById("welcomeScreen");
         if (welcome) welcome.remove();
-        addMessage("user", message, false);
-        input.value = "";
-        input.style.height = "auto";
+
+        if (!requestData.retry) {
+            let shownMessage = message;
+            if (requestData.file) shownMessage += (shownMessage ? "\n" : "") + "📎 " + requestData.file.name;
+            addMessage("user", shownMessage, false);
+            input.value = "";
+            input.style.height = "auto";
+        }
         const answerNode = addMessage("assistant", "", true);
         const thinking = document.createElement("div");
         thinking.className = "ai-thinking";
@@ -393,11 +332,19 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
         stopButton.hidden = false;
 
         try {
-            const response = await postJSON("/ai-assistant/send/", {
-                message,
-                conversation_id: conversationId,
-                mode: document.getElementById("modeSelect").value,
-                language: document.getElementById("languageSelect").value
+            const formData = new FormData();
+            formData.append("message", message || "Please review the attached document and provide useful feedback.");
+            formData.append("conversation_id", conversationId || "");
+            formData.append("mode", document.getElementById("modeSelect").value);
+            formData.append("language", document.getElementById("languageSelect").value);
+            formData.append("retry", requestData.retry ? "true" : "false");
+            if (requestData.file) formData.append("file", requestData.file);
+
+            const response = await fetch("/ai-assistant/send/", {
+                method: "POST",
+                headers: {"X-CSRFToken": csrfToken},
+                body: formData,
+                signal: controller.signal
             });
             if (!response.ok) {
                 let detail = "Unable to send your message.";
@@ -428,6 +375,18 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
             thinking.remove();
             formatText(answerNode, fullText);
             addActions(answerNode.parentElement, fullText);
+            lastRequest = {
+                message: message || "Please review the attached document and provide useful feedback.",
+                file: requestData.file || null,
+                retry: true
+            };
+            retryButton.hidden = false;
+            if (!requestData.retry) {
+                selectedFile = null;
+                fileInput.value = "";
+                fileChip.classList.remove("visible");
+                fileNameNode.textContent = "";
+            }
         } catch (error) {
             thinking.remove();
             if (error.name === "AbortError") {
@@ -435,6 +394,12 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
             } else {
                 showError(error.message || "Something went wrong. Please try again.");
                 if (!answerNode.textContent.trim()) answerNode.textContent = "No response received.";
+                lastRequest = {
+                    message: message || "Please review the attached document and provide useful feedback.",
+                    file: requestData.file || null,
+                    retry: true
+                };
+                retryButton.hidden = false;
             }
         } finally {
             sending = false;
@@ -447,7 +412,36 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
         }
     }
 
-    sendButton.addEventListener("click", sendMessage);
+    sendButton.addEventListener("click", () => sendMessage());
+    retryButton.addEventListener("click", () => {
+        if (lastRequest) sendMessage(lastRequest);
+    });
+    uploadButton.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        const allowed = /\\.(pdf|docx|txt)$/i.test(file.name);
+        if (!allowed) {
+            showError("Please choose a PDF, DOCX or TXT file.");
+            fileInput.value = "";
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showError("File is too large. Maximum upload size is 5 MB.");
+            fileInput.value = "";
+            return;
+        }
+        selectedFile = file;
+        fileNameNode.textContent = "📎 " + file.name;
+        fileChip.classList.add("visible");
+        clearError();
+    });
+    removeFileButton.addEventListener("click", () => {
+        selectedFile = null;
+        fileInput.value = "";
+        fileChip.classList.remove("visible");
+        fileNameNode.textContent = "";
+    });
     input.addEventListener("keydown", event => {
         if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
