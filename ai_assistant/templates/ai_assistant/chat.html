@@ -212,7 +212,16 @@ main#content{max-width:none;padding:0;margin:0;min-height:calc(100vh - 150px)}
             const text = parts[i] || "";
             if (text) {
                 const span = document.createElement("span");
-                span.innerHTML = escapeHtml(text).replace(/`([^`]+)`/g, "<code>$1</code>");
+                let safeText = escapeHtml(text);
+                safeText = safeText.replace(
+                    /\[([^\]]+)\]\((https:\/\/[^\s)]+)\)/g,
+                    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+                );
+                safeText = safeText.replace(
+                    /(?<![="'])(https:\/\/[^\s<]+)/g,
+                    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+                );
+                span.innerHTML = safeText.replace(/`([^`]+)`/g, "<code>$1</code>");
                 element.appendChild(span);
             }
         }

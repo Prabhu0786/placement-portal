@@ -4,12 +4,15 @@ import os
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, StreamingHttpResponse
+from django.db.models import Q
+from urllib.parse import urlsplit
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from google import genai
 from google.genai import types
 
 from .models import Conversation, Message
+from content.models import ContentStatus, Resource
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,112 @@ student grades or personal records. Be honest when uncertain. Reply in the
 language requested by the student, or follow the language they use.
 Use Markdown headings, lists and fenced code blocks where useful.
 """
+
+
+
+# ---------------------------------------------------------------------------
+# Placement Resource Hub retrieval
+# Only published resources with valid HTTPS links are eligible for AI context.
+# ---------------------------------------------------------------------------
+RESOURCE_STOP_WORDS = {
+    "the", "and", "for", "with", "from", "that", "this", "what", "how",
+    "can", "you", "your", "about", "please", "give", "show", "tell",
+    "explain", "help", "want", "need", "make", "create", "prepare",
+    "should", "would", "could", "into", "are", "is", "was", "were",
+    "a", "an", "to", "of", "in", "on", "at", "by", "or", "as", "my",
+    "me", "i", "we", "it", "be", "do", "does", "did", "learn", "study",
+}
+
+
+def retrieve_portal_resources(question, limit=5):
+    """Return relevant, published Resource Hub entries for a student's question."""
+    words = {
+        word.lower()
+        for word in __import__("re").findall(r"[A-Za-z0-9+#.]{2,}", question)
+        if word.lower() not in RESOURCE_STOP_WORDS
+    }
+    if not words:
+        return []
+
+    query = Q()
+    for word in words:
+        query |= (
+            Q(title__icontains=word)
+            | Q(topic__name__icontains=word)
+            | Q(topic__subject__icontains=word)
+            | Q(source__icontains=word)
+        )
+
+    candidates = (
+        Resource.objects.filter(status=ContentStatus.PUBLISHED)
+        .exclude(url="")
+        .filter(query)
+        .select_related("topic")
+        .only(
+            "id", "title", "url", "type", "language", "source",
+            "topic__name", "topic__subject",
+        )[:100]
+    )
+
+    ranked = []
+    for resource in candidates:
+        parsed = urlsplit(resource.url)
+        if parsed.scheme != "https" or not parsed.netloc:
+            continue
+
+        title = (resource.title or "").lower()
+        topic_name = (resource.topic.name or "").lower()
+        subject = (resource.topic.subject or "").lower()
+        source = (resource.source or "").lower()
+
+        score = 0
+        for word in words:
+            if word in title:
+                score += 4
+            if word in topic_name:
+                score += 3
+            if word in subject:
+                score += 2
+            if word in source:
+                score += 1
+
+        if score:
+            ranked.append((score, resource))
+
+    ranked.sort(key=lambda item: (-item[0], item[1].title.lower()))
+    return [resource for _, resource in ranked[:limit]]
+
+
+def build_resource_context(resources):
+    if not resources:
+        return "", ""
+    lines = []
+    for index, resource in enumerate(resources, start=1):
+        lines.append(
+            f"{index}. {resource.title} | "
+            f"Topic: {resource.topic.subject} / {resource.topic.name} | "
+            f"Type: {resource.get_type_display()} | "
+            f"Language: {resource.get_language_display()} | "
+            f"URL: {resource.url}"
+        )
+    context = (
+        "\n\nVERIFIED PORTAL RESOURCE RECORDS (from the student's Resource Hub):\n"
+        + "\n".join(lines)
+        + "\nUse these records only when relevant. Never invent additional portal "
+          "resources, descriptions, ratings, or availability. If none is relevant, "
+          "say so. Distinguish your general explanation from what the portal records show."
+    )
+    footer = (
+        "\n\n---\n**Related resources from this portal**\n"
+        + "\n".join(
+            f"- [{resource.title}]({resource.url}) — "
+            f"{resource.topic.subject} / {resource.topic.name} "
+            f"({resource.get_language_display()})"
+            for resource in resources
+        )
+    )
+    return context, footer
+
 
 
 def _owned_conversation(user, conversation_id):
@@ -131,9 +240,13 @@ def send_message(request):
         "hinglish": "Use natural, simple Hinglish.",
     }[language]
 
+    matched_resources = retrieve_portal_resources(message_text)
+    resource_context, resource_footer = build_resource_context(matched_resources)
+
     prompt_parts = [
         SYSTEM_INSTRUCTIONS,
         f"\nCurrent mode: {mode_text}\nResponse language: {language_text}\n",
+        resource_context,
     ]
     for item in previous:
         speaker = "Student" if item.role == Message.Role.USER else "Assistant"
@@ -159,6 +272,9 @@ def send_message(request):
                     yield piece
             final_text = "".join(collected).strip()
             if final_text:
+                if resource_footer:
+                    final_text += resource_footer
+                    yield resource_footer
                 Message.objects.create(
                     conversation=conversation,
                     role=Message.Role.ASSISTANT,
