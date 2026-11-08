@@ -1,3 +1,4 @@
+
 from django.conf import settings
 from django.db import models
 
@@ -38,3 +39,24 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.role}: {self.content[:60]}"
+
+
+class ResumeReview(models.Model):
+    """Stores the AI review, not the uploaded resume itself."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="resume_reviews",
+    )
+    filename = models.CharField(max_length=255)
+    target_role = models.CharField(max_length=160, blank=True)
+    overall_score = models.PositiveSmallIntegerField(default=0)
+    report = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Resume review: {self.user} ({self.created_at:%Y-%m-%d})"
