@@ -1,3 +1,4 @@
+
 {% extends "accounts/base.html" %}
 
 {% block title %}Dashboard - Placement Prep Portal{% endblock %}
@@ -493,6 +494,23 @@
 
       <a class="btn secondary" href="{% url 'plan' %}">
         Open my plan →
+      </a>
+    </article>
+
+
+    <!-- NEW: RESUME ANALYZER -->
+    <article class="card">
+      <div style="font-size:1.55rem;margin-bottom:8px">📄</div>
+
+      <h2>Resume Analyzer</h2>
+
+      <p class="muted">
+        Upload your resume and get AI-powered feedback on its quality,
+        skills, missing sections and improvements.
+      </p>
+
+      <a class="btn secondary" href="{% url 'resume_analyzer' %}">
+        Analyze my resume →
       </a>
     </article>
 

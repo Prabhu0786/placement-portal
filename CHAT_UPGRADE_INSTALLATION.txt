@@ -1,0 +1,9 @@
+This project now contains the incremental PlacePort AI upgrade.
+
+For the current installation and deployment instructions, read:
+PLACEPORT_UPGRADE_GUIDE.md
+
+The AI Assistant already includes saved conversations, streaming responses,
+retry, PDF/DOCX/TXT attachment extraction, language selection, and assistant modes.
+This update adds a dedicated AI Resume Analyzer and context-aware responses based
+on the authenticated student's own profile and recorded assessment summary.

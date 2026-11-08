@@ -1,0 +1,65 @@
+{% extends "accounts/base.html" %}
+{% block title %}AI Resume Analyzer | PlacePort{% endblock %}
+{% block content %}
+<style>
+.resume-wrap{max-width:1040px;margin:28px auto;padding:0 18px 40px;color:#202b45}
+.resume-hero{background:linear-gradient(125deg,#222b65,#5558d8);color:#fff;border-radius:20px;padding:28px 30px;margin-bottom:22px;position:relative;overflow:hidden}
+.resume-hero h1{margin:0 0 8px;font-size:clamp(1.6rem,3vw,2.15rem)}.resume-hero p{margin:0;color:#e5e7ff;max-width:680px;line-height:1.65}
+.resume-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:18px;align-items:start}
+.resume-card{background:#fff;border:1px solid #e5e8f1;border-radius:16px;padding:22px;box-shadow:0 8px 25px #1e2b5510}
+.resume-card h2{font-size:1.12rem;margin:0 0 15px}.resume-field{display:block;margin:13px 0}.resume-field span{display:block;font-size:.86rem;font-weight:700;margin-bottom:6px}.resume-field input,.resume-field textarea{width:100%;border:1px solid #dce1ed;border-radius:10px;padding:11px 12px;font:inherit;background:#fff}.resume-field textarea{min-height:125px;resize:vertical}.resume-help{font-size:.78rem;color:#7b8498;line-height:1.5}.resume-submit{border:0;border-radius:10px;background:#5558d8;color:#fff;padding:12px 17px;font-weight:750;cursor:pointer}.resume-score{display:flex;align-items:center;gap:15px;margin-bottom:18px}.resume-score strong{font-size:2.2rem;color:#4e50c9}.resume-list{padding-left:20px;line-height:1.65}.resume-list li{margin:7px 0}.resume-section{margin-top:19px}.resume-section h3{font-size:.98rem;margin:0 0 8px}.resume-bullet{background:#f7f8fc;border-radius:10px;padding:12px;margin:9px 0;font-size:.88rem;line-height:1.55}.resume-error{background:#fff1f2;border:1px solid #f3cbd1;color:#9b293b;border-radius:10px;padding:12px;margin-bottom:15px}.resume-history a{color:#4c50c8;text-decoration:none}.resume-history li{margin:9px 0}.resume-note{font-size:.78rem;color:#7d879b;line-height:1.55;margin-top:14px}
+@media(max-width:760px){.resume-grid{grid-template-columns:1fr}.resume-hero{padding:23px}}
+</style>
+<div class="resume-wrap">
+  <section class="resume-hero">
+    <div style="font-size:.75rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-bottom:9px">PLACEPORT · AI CAREER TOOLS</div>
+    <h1>AI Resume Analyzer</h1>
+    <p>Get practical feedback on your resume, identify missing sections, improve project descriptions and compare your skills with a target job description.</p>
+  </section>
+
+  {% if error %}<div class="resume-error" role="alert">{{ error }}</div>{% endif %}
+
+  {% if review %}
+  <section class="resume-card" style="margin-bottom:18px">
+    <div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap">
+      <div><span class="resume-help">REVIEW COMPLETED · {{ review.created_at|date:"d M Y, h:i A" }}</span><h2 style="margin:5px 0 3px">{{ review.filename }}</h2><span class="resume-help">Target role: {{ review.target_role|default:"Not specified" }}</span></div>
+      <div class="resume-score"><strong>{{ review.overall_score }}</strong><span class="resume-help">/ 100<br>Resume quality score</span></div>
+    </div>
+    <p style="line-height:1.65">{{ review.report.summary|default:"Review completed." }}</p>
+    <div class="resume-grid">
+      <div>
+        <div class="resume-section"><h3>Strengths</h3><ul class="resume-list">{% for item in review.report.strengths %}<li>{{ item }}</li>{% empty %}<li>No strengths were returned.</li>{% endfor %}</ul></div>
+        <div class="resume-section"><h3>Recommended improvements</h3><ul class="resume-list">{% for item in review.report.improvements %}<li>{{ item }}</li>{% empty %}<li>No improvement suggestions were returned.</li>{% endfor %}</ul></div>
+        <div class="resume-section"><h3>Missing sections</h3><ul class="resume-list">{% for item in review.report.missing_sections %}<li>{{ item }}</li>{% empty %}<li>No missing sections identified.</li>{% endfor %}</ul></div>
+      </div>
+      <div>
+        <div class="resume-section"><h3>Skills identified</h3><p>{% for item in review.report.skills_found %}<span style="display:inline-block;background:#eef0ff;color:#4447a8;border-radius:20px;padding:5px 9px;margin:3px;font-size:.8rem">{{ item }}</span>{% empty %}<span class="resume-help">No skills identified.</span>{% endfor %}</p></div>
+        <div class="resume-section"><h3>Job description match</h3><p class="resume-help">{% if review.report.job_match.match_score != None %}Match score: {{ review.report.job_match.match_score }}%{% else %}No job description was supplied.{% endif %}</p><p>{{ review.report.job_match.note }}</p><strong style="font-size:.85rem">Skills to strengthen</strong><ul class="resume-list">{% for item in review.report.job_match.missing_skills %}<li>{{ item }}</li>{% empty %}<li>None listed.</li>{% endfor %}</ul></div>
+      </div>
+    </div>
+    {% if review.report.bullet_rewrites %}<div class="resume-section"><h3>Project / experience bullet improvements</h3>{% for item in review.report.bullet_rewrites %}<div class="resume-bullet"><div><strong>Current:</strong> {{ item.original }}</div><div style="margin-top:7px"><strong>Suggested:</strong> {{ item.suggestion }}</div></div>{% endfor %}</div>{% endif %}
+    <div class="resume-section"><h3>Your next steps</h3><ol class="resume-list">{% for item in review.report.next_steps %}<li>{{ item }}</li>{% endfor %}</ol></div>
+    <p class="resume-note">This is AI-generated guidance, not an official ATS score or a guarantee of shortlisting. Verify every suggested change and never add experience or achievements you cannot substantiate.</p>
+  </section>
+  {% endif %}
+
+  <div class="resume-grid">
+    <section class="resume-card">
+      <h2>Analyse a resume</h2>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label class="resume-field"><span>Resume file (PDF, DOCX or TXT)</span><input type="file" name="resume" accept=".pdf,.docx,.txt" required><small class="resume-help">Maximum size 5 MB. Text-based PDF files only; scanned PDFs are not supported.</small></label>
+        <label class="resume-field"><span>Target role (optional)</span><input type="text" name="target_role" maxlength="160" placeholder="e.g. Graduate Software Developer"></label>
+        <label class="resume-field"><span>Job description (optional)</span><textarea name="job_description" maxlength="5000" placeholder="Paste the job description to compare your resume with the role..."></textarea></label>
+        <button class="resume-submit" type="submit">✦ Analyse my resume</button>
+      </form>
+      <p class="resume-note">Privacy: your uploaded file is processed in memory and is not saved as a file. PlacePort stores the generated review and filename in your account history. Avoid uploading sensitive information that is not needed for a resume review.</p>
+    </section>
+    <aside class="resume-card resume-history">
+      <h2>Recent reviews</h2>
+      {% if reviews %}<ul class="resume-list">{% for item in reviews %}<li><strong>{{ item.filename }}</strong><br><span class="resume-help">{{ item.created_at|date:"d M Y" }} · Score {{ item.overall_score }}/100</span></li>{% endfor %}</ul>{% else %}<p class="resume-help">Your previous reviews will appear here after your first analysis.</p>{% endif %}
+      <p style="margin-top:18px"><a href="{% url 'ai_chat' %}">← Back to AI Assistant</a></p>
+    </aside>
+  </div>
+</div>
+{% endblock %}
