@@ -7,3 +7,5 @@ db.sqlite3
 .vscode/
 data.json.env
 *.sqlite3
+data.json
+*.zip
