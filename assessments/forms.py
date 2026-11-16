@@ -27,7 +27,7 @@ class PracticeSetupForm(forms.Form):
     )
     count = forms.ChoiceField(
         label="Number of questions",
-        choices=[("5", "5"), ("10", "10"), ("15", "15")],
+        choices=[("5", "5"), ("10", "10"), ("15", "15"), ("20", "20"), ("30", "30"), ("40", "40"), ("50", "50")],
         initial="5",
     )
 

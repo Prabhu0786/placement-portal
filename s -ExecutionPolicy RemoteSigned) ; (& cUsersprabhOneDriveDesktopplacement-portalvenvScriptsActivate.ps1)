@@ -1,0 +1,15 @@
+[33ma24fa37[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Add free unified resource search
+[33mc1bfd1c[m Add Resume Analyzer to student dashboard
+[33m9ce083d[m Add ResumeReview model
+[33mf4179ca[m Add AI retry and document upload
+[33mebb256e[m Add AI retry and document upload
+[33m5cfe699[m Improve AI assistant UI and response quality
+[33m5d43928[m Improve AI assistant speed and reliability
+[33m2ce6a6a[m Connect AI assistant to Resource Hub
+[33mc9eb3f8[m Upgrade AI assistant with chat history and streaming
+[33m6ab59cc[m Improve resource relevance and categorization
+[33m6ce6c29[m Add resource source configuration
+[33m6649147[m Fix YouTube resource importer
+[33m9ec59e9[m Sync resource model and import commands
+[33ma9728a4[m Add resource import management commands
+[33mbce1ec5[m Add daily resource import workflow

@@ -26,10 +26,30 @@
     .brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#8b8cff,#5c5de5);font-weight:900;box-shadow:0 5px 18px #101b3d88}
     .brand small{display:block;color:#c7d2fe;font-weight:500;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase}
     .user-chip{color:#e0e7ff;background:#ffffff12;border:1px solid #ffffff24;padding:7px 11px;border-radius:999px;font-size:.82rem}
-    nav{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:15px}
-    nav a,nav button{display:inline-flex;align-items:center;color:#e7ebff;background:transparent;border:0;border-radius:9px;padding:8px 11px;font:inherit;font-size:.88rem;cursor:pointer}
-    nav a:hover,nav button:hover,nav a:focus-visible{background:#ffffff18;color:#fff}
-    nav .who{display:none}
+    .nav-shell{position:relative;margin-top:14px}
+    .account-menu{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:0}
+    .user-chip{font:inherit;cursor:pointer;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-chip:hover,.user-chip[aria-expanded="true"]{background:#ffffff24}
+    .account-dropdown{position:absolute;right:0;top:calc(100% + 8px);z-index:70;display:none;min-width:180px;padding:7px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 34px #07122f35}
+    .account-dropdown.is-open{display:block}
+    .account-dropdown a,.account-dropdown button{display:flex;align-items:center;width:100%;min-height:40px;padding:9px 11px;border:0;border-radius:8px;background:transparent;color:var(--text);font:inherit;font-size:.9rem;text-align:left;cursor:pointer}
+    .account-dropdown a:hover,.account-dropdown button:hover{background:#f0f2ff;color:var(--accent)}
+    .account-dropdown form{margin:0}
+    .ai-float{position:fixed;right:22px;bottom:22px;z-index:90;display:inline-flex;align-items:center;gap:9px;padding:12px 17px;border:1px solid #ffffff45;border-radius:999px;background:linear-gradient(135deg,#6567ef,#4244bd);color:#fff;font-weight:800;font-size:.92rem;box-shadow:0 10px 28px #17255455;transition:transform .18s,box-shadow .18s}
+    .ai-float:hover{color:#fff;transform:translateY(-2px);box-shadow:0 14px 32px #17255466}
+    .ai-float-icon{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#ffffff26;font-size:1rem}
+    .menu-toggle{display:inline-flex;align-items:center;gap:10px;color:#fff;background:#ffffff18;border:1px solid #ffffff45;border-radius:11px;padding:9px 15px;font:inherit;font-size:.9rem;font-weight:700;cursor:pointer}
+    .menu-toggle:hover,.menu-toggle[aria-expanded="true"]{background:#ffffff2b}
+    .menu-icon{font-size:1.2rem;line-height:1}
+    #global-navigation{position:absolute;top:calc(100% + 9px);left:0;z-index:50;display:none;flex-direction:column;align-items:stretch;gap:4px;width:min(330px,calc(100vw - 32px));max-height:min(70vh,520px);overflow-y:auto;overflow-x:hidden;padding:9px;background:#172554;border:1px solid #ffffff35;border-radius:14px;box-shadow:0 16px 38px #07122f66;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#8b9bd4 #263b70}
+    #global-navigation.is-open{display:flex}
+    #global-navigation a,#global-navigation button{display:flex;align-items:center;width:100%;min-height:42px;color:#e7ebff;background:transparent;border:0;border-radius:9px;padding:9px 12px;text-align:left;font:inherit;font-size:.9rem;cursor:pointer}
+    #global-navigation a:hover,#global-navigation button:hover,#global-navigation a:focus-visible,#global-navigation button:focus-visible{background:#ffffff18;color:#fff}
+    #global-navigation .inline{display:block;width:100%;margin:0}
+    #global-navigation .inline button{justify-content:flex-start}
+    #global-navigation::-webkit-scrollbar{width:9px}
+    #global-navigation::-webkit-scrollbar-track{background:#263b70;border-radius:10px}
+    #global-navigation::-webkit-scrollbar-thumb{background:#8b9bd4;border:2px solid #263b70;border-radius:10px}
     main{max-width:1180px;margin:30px auto 64px;padding:0 24px;min-height:55vh}
     h1,h2,h3{color:var(--text);line-height:1.25;letter-spacing:-.025em}
     h1{font-size:clamp(1.65rem,3vw,2.25rem);margin:0 0 15px}
@@ -91,8 +111,12 @@
     .page-footer{max-width:1180px;margin:0 auto;padding:0 24px 28px;color:var(--muted);font-size:.82rem}
     @media(max-width:700px){
       .header-inner{padding:13px 16px}.topline{align-items:flex-start}.brand{font-size:.95rem}.user-chip{font-size:.72rem;max-width:45%;text-align:right}
-      nav{flex-wrap:nowrap;overflow-x:auto;padding-bottom:5px;scrollbar-width:thin;gap:4px}
-      nav a,nav button{white-space:nowrap;font-size:.82rem;padding:8px 10px}
+      .nav-shell{margin-top:12px}
+      .account-menu{max-width:52%}.user-chip{max-width:100%;font-size:.72rem;padding:7px 9px}
+      .account-dropdown{min-width:165px}
+      .ai-float{right:14px;bottom:14px;padding:10px 13px;font-size:.84rem}
+      #global-navigation{width:min(320px,calc(100vw - 32px));max-height:65vh}
+      #global-navigation a,#global-navigation button{font-size:.86rem}
       main{margin:20px auto 44px;padding:0 15px}
       .card{padding:17px;border-radius:15px}
       .grid{grid-template-columns:1fr}
@@ -112,18 +136,32 @@
           <span>Placement Prep <small>Student success workspace</small></span>
         </a>
         {% if user.is_authenticated %}
-          <span class="user-chip">{{ user.get_full_name|default:user.username }}{% if user.role_name %} · {{ user.role_name }}{% endif %}</span>
+          <div class="account-menu">
+            <button class="user-chip" id="account-toggle" type="button" aria-expanded="false" aria-controls="account-dropdown">
+              {{ user.get_full_name|default:user.username }}{% if user.role_name %} · {{ user.role_name }}{% endif %} ▾
+            </button>
+            <div class="account-dropdown" id="account-dropdown" aria-hidden="true">
+              {% if user.is_student %}<a href="{% url 'profile' %}">My Profile</a>{% endif %}
+              <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit">Log out ↗</button>
+              </form>
+            </div>
+          </div>
         {% else %}
           <span class="user-chip">Prepare. Practice. Get placed.</span>
         {% endif %}
       </div>
-      <nav aria-label="Main">
+      <div class="nav-shell">
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-expanded="false" aria-controls="global-navigation">
+          <span class="menu-icon" aria-hidden="true">☰</span><span>Menu</span>
+        </button>
+        <nav id="global-navigation" aria-label="Main" aria-hidden="true">
         {% if user.is_authenticated %}
           <a href="{% url 'dashboard' %}">Dashboard</a>
 
           {% if user.is_student %}
-            <a href="{% url 'practice_home' %}">Practice</a>
-            <a href="{% url 'assessment_list' %}">Assessments</a>
+            <a href="{% url 'assessment_list' %}">Practice &amp; Assessments</a>
             <a href="{% url 'progress' %}">Progress</a>
             <a href="{% url 'plan' %}">Plan</a>
             <a href="{% url 'recommendations' %}">For you</a>
@@ -138,10 +176,6 @@
           <a href="{% url 'resource_list' %}">Resources</a>
           <a href="{% url 'company_list' %}">Companies</a>
 
-          {% if user.is_student %}
-            <a href="{% url 'profile' %}">My profile</a>
-          {% endif %}
-
           {% if user.is_tpo or user.is_faculty %}
             <a href="{% url 'manage_home' %}">Manage</a>
           {% endif %}
@@ -150,18 +184,65 @@
             <a href="/admin/">Admin</a>
           {% endif %}
 
-          <form class="inline" method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit">Log out ↗</button>
-          </form>
         {% else %}
           <a href="{% url 'home' %}">Home</a>
           <a href="{% url 'login' %}">Log in</a>
           <a href="{% url 'register' %}">Register</a>
         {% endif %}
-      </nav>
+        </nav>
+      </div>
     </div>
   </header>
+  <script>
+    (function () {
+      const nav = document.getElementById("global-navigation");
+      const toggle = document.getElementById("menu-toggle");
+      const accountToggle = document.getElementById("account-toggle");
+      const accountDropdown = document.getElementById("account-dropdown");
+
+      function setAccountMenu(open) {
+        if (!accountToggle || !accountDropdown) return;
+        accountDropdown.classList.toggle("is-open", open);
+        accountToggle.setAttribute("aria-expanded", String(open));
+        accountDropdown.setAttribute("aria-hidden", String(!open));
+      }
+      if (accountToggle && accountDropdown) {
+        accountToggle.addEventListener("click", function (event) {
+          event.stopPropagation();
+          setAccountMenu(accountToggle.getAttribute("aria-expanded") !== "true");
+        });
+        accountDropdown.addEventListener("click", function (event) { event.stopPropagation(); });
+      }
+      if (!nav || !toggle) return;
+
+      function setMenu(open) {
+        nav.classList.toggle("is-open", open);
+        toggle.setAttribute("aria-expanded", String(open));
+        nav.setAttribute("aria-hidden", String(!open));
+      }
+
+      toggle.addEventListener("click", function () {
+        setMenu(toggle.getAttribute("aria-expanded") !== "true");
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!nav.contains(event.target) && !toggle.contains(event.target)) setMenu(false);
+        if (accountDropdown && !accountDropdown.contains(event.target) && !accountToggle.contains(event.target)) setAccountMenu(false);
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          setMenu(false);
+          setAccountMenu(false);
+          toggle.focus();
+        }
+      });
+
+      nav.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", function () { setMenu(false); });
+      });
+    })();
+  </script>
 
   <main id="content">
     {% if messages %}
@@ -171,6 +252,10 @@
     {% endif %}
     {% block content %}{% endblock %}
   </main>
+
+  <a class="ai-float" href="{% url 'ai_chat' %}" aria-label="Open AI Assistant">
+    <span class="ai-float-icon" aria-hidden="true">✦</span><span>AI Assistant</span>
+  </a>
 
   <footer class="page-footer">
     Placement Prep Portal · Build skills with consistency.

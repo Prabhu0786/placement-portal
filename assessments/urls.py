@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import manage_views, views
+from . import ai_mock_views, manage_views, views
 
 urlpatterns = [
     # Practice
@@ -8,7 +8,7 @@ urlpatterns = [
     path("practice/start/", views.practice_start, name="practice_start"),
     path("practice/session/<int:pk>/", views.practice_session, name="practice_session"),
     path("practice/session/<int:pk>/result/", views.practice_result, name="practice_result"),
-    # Timed assessments (students)
+    # AI-generated topic mock tests\n    path("ai-mock/generate/", ai_mock_views.generate_mock, name="ai_mock_generate"),\n    # Timed assessments (students)
     path("assessments/", views.assessment_list, name="assessment_list"),
     path("assessments/<int:pk>/start/", views.assessment_start, name="assessment_start"),
     path("attempts/<int:pk>/take/", views.attempt_take, name="attempt_take"),

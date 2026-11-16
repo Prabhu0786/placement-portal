@@ -1,7 +1,7 @@
 import random
 
 from django.contrib import messages
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -36,8 +36,8 @@ def _home_context(request, form):
 
 @role_required("Student")
 def practice_home(request):
-    form = PracticeSetupForm(initial={"topic": request.GET.get("topic") or None})
-    return render(request, "assessments/practice_home.html", _home_context(request, form))
+    # Legacy route: Practice now lives inside the unified Practice & Assessments page.
+    return redirect("assessment_list")
 
 
 @role_required("Student")
@@ -140,10 +140,23 @@ def assessment_list(request):
         for a in assessments
     ]
     finished = [a for a in attempts if a.status in (Attempt.Status.EVALUATED, Attempt.Status.REVIEWED)]
+    practice_form = PracticeSetupForm(initial={"topic": request.GET.get("topic") or None})
+    practice_attempts = (
+        Attempt.objects.filter(user=request.user, attempt_type=Attempt.AttemptType.PRACTICE)
+        .annotate(question_count=Count("responses"))
+        .order_by("-id")[:8]
+    )
+    available_practice = Question.objects.filter(status=PUBLISHED).count()
     return render(
         request,
         "assessments/assessment_list.html",
-        {"rows": rows, "history": finished[:15]},
+        {
+            "rows": rows,
+            "history": finished[:15],
+            "practice_form": practice_form,
+            "practice_attempts": practice_attempts,
+            "available_practice": available_practice,
+        },
     )
 
 
@@ -151,7 +164,12 @@ def assessment_list(request):
 @require_POST
 def assessment_start(request, pk):
     # Access check: only published assessments can be started (BR-4).
-    assessment = get_object_or_404(Assessment, pk=pk, status=PUBLISHED)
+    assessment = get_object_or_404(
+        Assessment.objects.filter(
+            Q(status=PUBLISHED) | Q(status=ContentStatus.DRAFT, created_by=request.user, title__startswith="AI Mock: ")
+        ),
+        pk=pk,
+    )
     if not assessment.assessmentquestion_set.exists():
         messages.error(request, "This assessment has no questions yet.")
         return redirect("assessment_list")

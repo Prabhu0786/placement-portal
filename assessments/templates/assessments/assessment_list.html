@@ -1,8 +1,50 @@
 {% extends "accounts/base.html" %}
-{% block title %}Timed assessments - Placement Prep Portal{% endblock %}
+{% block title %}Practice & Assessments - Placement Prep Portal{% endblock %}
 {% block content %}
-<h1>Timed assessments</h1>
-<p class="muted">Mock tests with a time limit. Your answers are saved as you go, and the timer is controlled by the server.</p>
+<h1>Practice &amp; Assessments</h1>
+<p class="muted">One place for daily question practice, AI-generated topic mock tests and scheduled assessments.</p>
+
+<div class="card">
+  <span class="tag">QUESTION BANK PRACTICE</span>
+  <h2 style="margin-top:12px">Practice from published questions</h2>
+  <p class="muted">{{ available_practice }} published question{{ available_practice|pluralize }} available. Select filters or leave them open for a mixed practice set.</p>
+  <form method="post" action="{% url 'practice_start' %}" novalidate>
+    {% csrf_token %}
+    <div class="filters">
+      {% for field in practice_form %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% for error in field.errors %}<p class="error" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <p style="margin-top:14px"><button class="btn" type="submit">Start question practice →</button></p>
+  </form>
+  {% if practice_attempts %}
+    <details>
+      <summary>Recent practice sessions</summary>
+      <div class="table-wrap" style="margin-top:12px">
+        <table><thead><tr><th>Started</th><th>Questions</th><th>Status</th><th>Score</th><th></th></tr></thead>
+        <tbody>
+        {% for a in practice_attempts %}
+          <tr>
+            <td>{{ a.started_at|date:"j M Y, g:i a" }}</td>
+            <td>{{ a.question_count }}</td>
+            <td>{{ a.get_status_display }}</td>
+            <td>{% if a.score is not None %}{{ a.score|floatformat:"0" }} correct{% else %}—{% endif %}</td>
+            <td>
+              {% if a.status == "in_progress" %}<a class="btn small" href="{% url 'practice_session' a.pk %}">Continue</a>
+              {% elif a.status == "evaluated" or a.status == "reviewed" %}<a class="btn secondary small" href="{% url 'practice_result' a.pk %}">View feedback</a>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody></table>
+      </div>
+    </details>
+  {% endif %}
+</div>
+
 
 {% if rows %}
   <div class="grid">

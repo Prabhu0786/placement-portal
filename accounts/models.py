@@ -98,3 +98,34 @@ class ProjectAchievement(models.Model):
 
     def __str__(self):
         return f"{self.get_type_display()}: {self.title}"
+
+
+class PasswordResetOTP(models.Model):
+    """Stores only a hashed OTP for email-based password recovery."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="password_reset_otps",
+    )
+    email = models.EmailField(db_index=True)
+    otp_hash = models.CharField(max_length= 128, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    request_ip = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["email", "created_at"]),
+            models.Index(fields=["request_ip", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"Password reset OTP for {self.email}"
+

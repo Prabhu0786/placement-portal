@@ -80,8 +80,6 @@ def dashboard(request):
             top_recommendations=(
                 planning.current_recommendations(request.user)[:3]
             ),
-
-            # Real performance data
             overview=analytics_services.student_overview(
                 request.user
             ),
