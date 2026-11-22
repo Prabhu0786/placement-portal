@@ -1,3 +1,4 @@
+
 name: Daily Resource Import
 
 on:
@@ -8,6 +9,9 @@ on:
 jobs:
   import-resources:
     runs-on: ubuntu-latest
+
+    env:
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
 
     steps:
       - name: Checkout repository
