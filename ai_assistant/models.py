@@ -60,3 +60,5 @@ class ResumeReview(models.Model):
 
     def __str__(self):
         return f"Resume review: {self.user} ({self.created_at:%Y-%m-%d})"
+
+from .mock_models import MockInterview, MockInterviewTurn  # noqa: E402,F401

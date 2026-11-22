@@ -1,0 +1,28 @@
+{# One answered question with its feedback. Needs: turn #}
+{% if turn.feedback_status == "done" %}
+  <p>
+    <span class="mi-rating mi-r{{ turn.rating }}">{{ turn.rating }} / 5 &middot; {{ turn.rating_label }}</span>
+    <span class="mi-help">AI estimate</span>
+  </p>
+  {% if turn.feedback.strengths %}
+    <strong>What worked</strong>
+    <ul class="mi-list">{% for item in turn.feedback.strengths %}<li>{{ item }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if turn.feedback.improvements %}
+    <strong>How to improve</strong>
+    <ul class="mi-list">{% for item in turn.feedback.improvements %}<li>{{ item }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if turn.feedback.better_answer %}
+    <details class="mi-more"><summary>See a stronger sample answer</summary><div class="mi-quote">{{ turn.feedback.better_answer }}</div></details>
+  {% endif %}
+{% else %}
+  <div class="mi-warn" role="status">
+    AI feedback is not available for this answer right now. Your answer is saved.
+    <form method="post" action="{% url 'ai_mock_retry' turn.pk %}" style="margin-top:8px">{% csrf_token %}
+      <button class="btn secondary" type="submit">Try feedback again</button>
+    </form>
+  </div>
+{% endif %}
+{% if turn.reference_answer %}
+  <details class="mi-more"><summary>Placement team's model answer</summary><div class="mi-quote">{{ turn.reference_answer }}</div></details>
+{% endif %}

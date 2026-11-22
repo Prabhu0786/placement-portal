@@ -222,7 +222,8 @@ class StudentViewTests(AnalyticsTestCase):
 
     def test_practice_page_preselects_topic(self):
         self.login(self.student)
-        page = self.client.get(reverse("practice_home"), {"topic": self.t2.pk})
+        # practice_home redirects to the unified page and must keep ?topic=
+        page = self.client.get(reverse("practice_home"), {"topic": self.t2.pk}, follow=True)
         self.assertContains(page, f'<option value="{self.t2.pk}" selected>')
 
     def test_navigation_and_dashboard_links(self):

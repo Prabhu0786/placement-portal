@@ -75,6 +75,9 @@ class StudentProfile(models.Model):
     # BR-14: resume, project and performance data need consent.
     consent_given = models.BooleanField(default=False)
     consent_date = models.DateTimeField(null=True, blank=True)
+    # Separate consent for sending text to an outside AI service (BR-14).
+    ai_consent_given = models.BooleanField(default=False)
+    ai_consent_date = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Profile of {self.user}"

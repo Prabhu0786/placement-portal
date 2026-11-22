@@ -37,7 +37,11 @@ def _home_context(request, form):
 @role_required("Student")
 def practice_home(request):
     # Legacy route: Practice now lives inside the unified Practice & Assessments page.
-    return redirect("assessment_list")
+    # Keep any query string (for example ?topic=5) so "Practise this topic" still preselects the topic.
+    url = reverse("assessment_list")
+    if request.GET:
+        url = f"{url}?{request.GET.urlencode()}"
+    return redirect(url)
 
 
 @role_required("Student")

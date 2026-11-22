@@ -1,0 +1,43 @@
+{% extends "accounts/base.html" %}
+{% block title %}Interview report | PlacePort{% endblock %}
+{% block content %}
+{% include "ai_assistant/_mock_styles.html" %}
+<div class="mi-wrap">
+  <section class="mi-hero">
+    <h1>Interview report: {{ interview.topic_label }}</h1>
+    <p>{{ interview.created_at|date:"j M Y, g:i a" }} &middot; {{ interview.total_questions }} question{{ interview.total_questions|pluralize }}
+      {% if interview.average_rating is not None %}&middot; average rating <strong>{{ interview.average_rating }} / 5</strong>{% endif %}</p>
+  </section>
+
+  <section class="mi-card">
+    <h2>Summary</h2>
+    {% if narrative %}
+      <p>{{ narrative.overall }}</p>
+      {% if narrative.strengths %}<strong>Strengths</strong><ul class="mi-list">{% for i in narrative.strengths %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
+      {% if narrative.focus_areas %}<strong>Focus on</strong><ul class="mi-list">{% for i in narrative.focus_areas %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
+      {% if narrative.next_steps %}<strong>Next steps</strong><ul class="mi-list">{% for i in narrative.next_steps %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
+    {% endif %}
+    <p class="mi-help">{% if summary_source == "ai" %}Summary written by AI from the feedback above.{% else %}Summary calculated by the portal.{% endif %} This is practice advice, not an official assessment, and it does not affect your progress or reports.</p>
+  </section>
+
+  {% for turn in turns %}
+    <section class="mi-card">
+      <span class="mi-badge">Question {{ turn.order }}</span>
+      <p class="mi-q">{{ turn.question_text }}</p>
+      <strong>Your answer</strong>
+      <div class="mi-quote">{{ turn.answer_text }}</div>
+      {% include "ai_assistant/_mock_feedback.html" %}
+    </section>
+  {% endfor %}
+
+  <p class="mi-row">
+    <span>
+      <a class="btn" href="{% url 'ai_mock_home' %}">Start another interview</a>
+      <a class="btn secondary" href="{% url 'recommendations' %}">My recommendations</a>
+    </span>
+    <form method="post" action="{% url 'ai_mock_delete' interview.pk %}" onsubmit="return confirm('Delete this interview and its answers?');">{% csrf_token %}
+      <button class="btn secondary" type="submit">Delete this interview</button>
+    </form>
+  </p>
+</div>
+{% endblock %}

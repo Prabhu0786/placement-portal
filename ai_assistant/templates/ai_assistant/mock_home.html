@@ -1,0 +1,116 @@
+{% extends "accounts/base.html" %}
+{% block title %}AI Mock Interview | PlacePort{% endblock %}
+{% block content %}
+{% include "ai_assistant/_mock_styles.html" %}
+<div class="mi-wrap">
+  <section class="mi-hero">
+    <h1>AI Mock Interview</h1>
+    <p>Practise answering interview questions one at a time and get feedback on each answer, plus a short summary at the end. It is practice advice from an AI, not an official assessment.</p>
+  </section>
+
+  {% if not consent %}
+    <section class="mi-card" aria-labelledby="consent-title">
+      <h2 id="consent-title">Before you start: your consent</h2>
+      <div class="mi-note">
+        <p style="margin-top:0">To give feedback, your answers are sent to Google's Gemini AI service. Please read this first:</p>
+        <ul class="mi-list">
+          <li><strong>What is sent:</strong> the interview question, the answer you type, the interview type and your optional target role. <strong>Not</strong> your name, email, username or profile.</li>
+          <li><strong>Please do not type</strong> phone numbers, addresses or other personal details in your answers.</li>
+          <li><strong>Private to you:</strong> your transcripts are visible only to you. The placement coordinator, faculty and administrators do not see them, and they do not affect your progress or reports.</li>
+          <li><strong>You are in control:</strong> you can delete any interview, or all of them, and withdraw your consent at any time.</li>
+          <li><strong>Google handles the data under its own terms</strong> for the service plan in use.</li>
+          <li>AI feedback can be wrong or too generous. Treat it as advice and compare with the model answers.</li>
+        </ul>
+      </div>
+      <form method="post" action="{% url 'ai_mock_consent' %}" style="margin-top:14px">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="grant">
+        <label style="display:flex;gap:10px;align-items:flex-start;font-weight:400">
+          <input type="checkbox" name="agree" required style="margin-top:4px">
+          <span>I understand and agree that my interview answers are sent to an AI service to generate feedback.</span>
+        </label>
+        <p><button class="btn" type="submit">Turn on AI feedback</button></p>
+      </form>
+    </section>
+  {% else %}
+    <div class="mi-grid">
+      <section class="mi-card" aria-labelledby="setup-title">
+        <h2 id="setup-title">Start a mock interview</h2>
+        <form method="post" action="{% url 'ai_mock_start' %}" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}<p class="mi-error" role="alert">{{ form.non_field_errors }}</p>{% endif %}
+          <div class="mi-field">
+            <label for="{{ form.source.id_for_label }}">{{ form.source.label }}</label>
+            {{ form.source }}
+            <div class="mi-help">The question bank holds questions approved by your placement team ({{ bank_count }} published). AI-generated questions are new, unreviewed questions.</div>
+            {% for e in form.source.errors %}<p class="mi-error" role="alert">{{ e }}</p>{% endfor %}
+          </div>
+          {% for field in form %}
+            {% if field.name != "source" %}
+              <div class="mi-field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<div class="mi-help">{{ field.help_text }}</div>{% endif %}
+                {% for e in field.errors %}<p class="mi-error" role="alert">{{ e }}</p>{% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+          <p class="mi-help">Interviews used today: {{ used_today }} of {{ limit }}.</p>
+          <button class="btn" type="submit" {% if used_today >= limit %}disabled{% endif %}>Start interview</button>
+        </form>
+      </section>
+
+      <aside>
+        <section class="mi-card">
+          <h2>Tips</h2>
+          <ul class="mi-list">
+            <li>Answer as if it were a real interview, in 4 to 8 sentences.</li>
+            <li>For behavioural questions, use <strong>S</strong>ituation, <strong>T</strong>ask, <strong>A</strong>ction, <strong>R</strong>esult.</li>
+            <li>Give one concrete example instead of general claims.</li>
+          </ul>
+        </section>
+        <section class="mi-card">
+          <h2>Your privacy</h2>
+          <p class="mi-help">AI feedback is switched on for you.</p>
+          <form method="post" action="{% url 'ai_mock_consent' %}" style="margin-bottom:8px">{% csrf_token %}
+            <input type="hidden" name="action" value="withdraw">
+            <button class="btn secondary" type="submit">Withdraw consent</button>
+          </form>
+          {% if history %}
+          <form method="post" action="{% url 'ai_mock_delete_all' %}" onsubmit="return confirm('Delete ALL your mock interviews? This cannot be undone.');">{% csrf_token %}
+            <button class="btn secondary" type="submit">Delete all my interviews</button>
+          </form>
+          {% endif %}
+        </section>
+      </aside>
+    </div>
+
+    <section class="mi-card">
+      <h2>Your recent interviews</h2>
+      {% if history %}
+      <div style="overflow-x:auto">
+      <table class="mi-hist">
+        <thead><tr><th>Date</th><th>Type</th><th>Questions</th><th>Average</th><th></th></tr></thead>
+        <tbody>
+        {% for item in history %}
+          <tr>
+            <td>{{ item.created_at|date:"j M Y, g:i a" }}</td>
+            <td>{{ item.topic_label }} <span class="mi-badge">{{ item.get_source_display }}</span></td>
+            <td>{{ item.total_questions }}</td>
+            <td>{% if item.status == "completed" %}{% if item.average_rating is not None %}{{ item.average_rating }} / 5{% else %}-{% endif %}{% else %}In progress{% endif %}</td>
+            <td>
+              {% if item.status == "completed" %}<a class="btn secondary" href="{% url 'ai_mock_report' item.pk %}">View report</a>
+              {% else %}<a class="btn" href="{% url 'ai_mock_run' item.pk %}">Continue</a>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% else %}
+        <p class="mi-help">No interviews yet. Start your first one above.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

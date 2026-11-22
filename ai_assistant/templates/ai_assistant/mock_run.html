@@ -1,0 +1,50 @@
+{% extends "accounts/base.html" %}
+{% block title %}Mock interview | PlacePort{% endblock %}
+{% block content %}
+{% include "ai_assistant/_mock_styles.html" %}
+<div class="mi-wrap">
+  <section class="mi-hero">
+    <h1>Mock interview: {{ interview.topic_label }}</h1>
+    <p>Question {{ current.order }} of {{ interview.total_questions }}. Take your time and answer as you would in a real interview.</p>
+    <div class="mi-progress" role="progressbar" aria-valuemin="0" aria-valuemax="{{ interview.total_questions }}" aria-valuenow="{{ answered|length }}"><span style="width: {% widthratio answered|length interview.total_questions 100 %}%"></span></div>
+  </section>
+
+  {% for turn in answered %}
+    <section class="mi-card">
+      <span class="mi-badge">Question {{ turn.order }}</span>
+      <p class="mi-q">{{ turn.question_text }}</p>
+      <details class="mi-more" {% if forloop.last %}open{% endif %}>
+        <summary>Your answer and feedback</summary>
+        <div class="mi-quote">{{ turn.answer_text }}</div>
+        {% include "ai_assistant/_mock_feedback.html" %}
+      </details>
+    </section>
+  {% endfor %}
+
+  <section class="mi-card" aria-labelledby="current-q">
+    <span class="mi-badge">Question {{ current.order }} of {{ interview.total_questions }}</span>
+    <p class="mi-q" id="current-q">{{ current.question_text }}</p>
+    <form method="post" id="answer-form">
+      {% csrf_token %}
+      <input type="hidden" name="turn" value="{{ current.pk }}">
+      <div class="mi-field">
+        <label for="answer">Your answer</label>
+        <textarea id="answer" name="answer" rows="9" maxlength="{{ max_chars }}" required>{{ draft }}</textarea>
+        <div class="mi-help"><span id="count">0</span> characters. Write at least {{ min_chars }}. Please do not include personal details such as phone numbers.</div>
+      </div>
+      <button class="btn" type="submit" id="send">Submit answer</button>
+      <a class="btn secondary" href="{% url 'ai_mock_home' %}">Save and leave</a>
+      <p class="mi-help" id="busy" hidden role="status">Getting feedback. This can take a few seconds...</p>
+    </form>
+  </section>
+</div>
+<script>
+(function () {
+  var box = document.getElementById("answer"), count = document.getElementById("count");
+  var form = document.getElementById("answer-form"), send = document.getElementById("send"), busy = document.getElementById("busy");
+  function update() { count.textContent = box.value.length; }
+  box.addEventListener("input", update); update();
+  form.addEventListener("submit", function () { send.disabled = true; busy.hidden = false; });
+})();
+</script>
+{% endblock %}

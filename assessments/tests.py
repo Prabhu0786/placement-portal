@@ -66,7 +66,8 @@ class AccessTests(PracticeTestCase):
         self.login(self.tpo)
         self.assertEqual(self.client.get(reverse("practice_home")).status_code, 403)
         self.client.logout(); self.login(self.student)
-        self.assertEqual(self.client.get(reverse("practice_home")).status_code, 200)
+        # practice_home is now a redirect to the unified Practice & Assessments page
+        self.assertRedirects(self.client.get(reverse("practice_home")), reverse("assessment_list"))
 
     def test_start_requires_post(self):
         self.login(self.student)
@@ -90,7 +91,8 @@ class StartTests(PracticeTestCase):
         self.mcq(status="draft")
         self.login(self.student)
         response = self.start()
-        self.assertRedirects(response, reverse("practice_home"))
+        # practice_home itself redirects on, so only check where this response sends the student
+        self.assertRedirects(response, reverse("practice_home"), fetch_redirect_response=False)
         self.assertEqual(Attempt.objects.count(), 0)
 
     def test_filters_and_count_limit(self):
@@ -116,7 +118,8 @@ class StartTests(PracticeTestCase):
         self.mcq()
         self.login(self.student)
         self.start()
-        self.assertContains(self.client.get(reverse("practice_home")), "Continue")
+        # the practice history now appears on the unified Practice & Assessments page
+        self.assertContains(self.client.get(reverse("assessment_list")), "Continue")
 
 
 class SessionTests(PracticeTestCase):
