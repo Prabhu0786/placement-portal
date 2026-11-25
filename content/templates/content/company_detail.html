@@ -4,6 +4,11 @@
 <p><a href="{% url 'company_list' %}">&larr; All companies</a></p>
 <div class="card">
   <h1>{{ company.name }}</h1>
+  {% if user.is_student %}
+    <form method="post" action="{% url 'application_track' company.pk %}" style="margin: 8px 0;">{% csrf_token %}
+      <button class="btn secondary" type="submit">Track this company</button>
+    </form>
+  {% endif %}
   <p class="muted">Source: {{ company.source }}. Last updated {{ company.updated_at|date:"j M Y" }}.</p>
   <h2>Eligibility</h2>
   <p>{{ company.eligibility|default:"Not provided yet."|linebreaksbr }}</p>

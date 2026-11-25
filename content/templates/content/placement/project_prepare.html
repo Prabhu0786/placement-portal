@@ -1,0 +1,24 @@
+{% extends "accounts/base.html" %}
+{% block title %}{{ project.title }} - Project prompts{% endblock %}
+{% block content %}
+<p><a href="{% url 'project_list' %}">&larr; All projects</a></p>
+<div class="card">
+  <h1>{{ project.title }}</h1>
+  {% if project.description %}<p>{{ project.description|linebreaksbr }}</p>{% endif %}
+  {% if project.evidence_link %}<p><a href="{{ project.evidence_link }}" target="_blank" rel="noopener noreferrer">Project link</a></p>{% endif %}
+  <p class="muted">Write brief notes, not full sentences. Only you can see these answers. Leave a box empty to skip it.</p>
+</div>
+<form method="post" novalidate>
+  {% csrf_token %}
+  <div class="card">
+    {% for field in form %}
+      <div class="field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}<p class="error" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+    <button class="btn" type="submit">Save my answers</button>
+  </div>
+</form>
+{% endblock %}

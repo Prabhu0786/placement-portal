@@ -17,6 +17,10 @@
   {% if user.is_tpo %}
   <div class="card"><h2>Companies</h2><p class="muted">Eligibility, stages, source and updated date.</p><a class="btn" href="{% url 'manage_companies' %}">Manage companies</a></div>
   {% endif %}
+  <div class="card"><h2>Notices and contests</h2><p class="muted">Announcements and contests, and who registered.</p><a class="btn" href="{% url 'manage_notices' %}">Manage notices</a></div>
+  {% if user.is_tpo %}
+  <div class="card"><h2>Applications</h2><p class="muted">Applications from students who gave consent.</p><a class="btn" href="{% url 'manage_applications' %}">View applications</a></div>
+  {% endif %}
   <div class="card"><h2>Topics</h2><p class="muted">Subjects and topics that organise everything.</p><a class="btn" href="{% url 'manage_topics' %}">Manage topics</a></div>
 </div>
 <div class="card">

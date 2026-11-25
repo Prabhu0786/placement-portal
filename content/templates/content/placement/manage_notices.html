@@ -1,0 +1,55 @@
+{% extends "accounts/base.html" %}
+{% block title %}Manage notices - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Notices and contests</h1>
+  <a class="btn" href="{% url 'notice_create' %}">Add a notice or contest</a>
+</div>
+<p><a href="{% url 'manage_home' %}">&larr; Manage content</a></p>
+<div class="card">
+  <form method="get" class="filters">
+    <div class="field">
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        <option value="">All</option>
+        {% for value, label in statuses %}<option value="{{ value }}"{% if value == status %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><button class="btn" type="submit">Filter</button></div>
+  </form>
+</div>
+<div class="card">
+  {% if page.object_list %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Title</th><th>Type</th><th>Date</th><th>Status</th><th>Registered</th><th>Added by</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for n in page.object_list %}
+      <tr>
+        <td>{{ n.title }}</td>
+        <td>{{ n.get_kind_display }}</td>
+        <td>{{ n.date|date:"j M Y" }}</td>
+        <td><span class="tag status-{{ n.status }}">{{ n.get_status_display }}</span></td>
+        <td>{% if n.kind == "contest" %}{{ n.participant_count }}{% else %}-{% endif %}</td>
+        <td>{{ n.created_by|default:"-" }}</td>
+        <td>
+          <div class="actions">
+            {% if n.editable %}<a class="btn secondary small" href="{% url 'notice_edit' n.pk %}">Edit</a>{% endif %}
+            {% for to, label in n.actions %}
+              <form class="inline" method="post" action="{% url 'notice_transition' n.pk %}">{% csrf_token %}
+                <input type="hidden" name="to" value="{{ to }}"><button class="btn small" type="submit">{{ label }}</button>
+              </form>
+            {% endfor %}
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% include "content/_pager.html" %}
+  {% else %}
+    <p class="muted">Nothing here yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

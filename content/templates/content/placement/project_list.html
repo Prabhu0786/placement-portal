@@ -1,0 +1,24 @@
+{% extends "accounts/base.html" %}
+{% block title %}Project prompts - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Explain your projects</h1>
+<p><a href="{% url 'prepare_home' %}">&larr; Back</a></p>
+<p class="muted">Interviewers love to ask about projects. Write short answers to {{ total }} common questions for each one, then practise saying them out loud.</p>
+{% if projects %}
+  <div class="grid">
+    {% for p in projects %}
+      <div class="card">
+        <h2>{{ p.title }}</h2>
+        <p class="muted">{{ p.answered }} of {{ total }} questions answered</p>
+        <a class="btn" href="{% url 'project_prepare' p.pk %}">{% if p.answered %}Continue{% else %}Start{% endif %}</a>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">
+    <h2>No projects yet</h2>
+    <p class="muted">Add a project to your profile first. Choose the type "Project".</p>
+    <a class="btn" href="{% url 'achievement_add' %}">Add a project</a>
+  </div>
+{% endif %}
+{% endblock %}

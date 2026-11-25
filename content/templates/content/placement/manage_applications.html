@@ -1,0 +1,78 @@
+{% extends "accounts/base.html" %}
+{% block title %}Applications - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Student applications</h1>
+<p><a href="{% url 'manage_home' %}">&larr; Manage content</a></p>
+<div class="alert warning" role="status">
+  Privacy: only students who have <strong>given consent</strong> are included ({{ consenting }} of {{ total_students }} student{{ total_students|pluralize }}).
+</div>
+
+<div class="card">
+  <h2>By company</h2>
+  {% if summary %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Company</th><th>Total</th><th>Interested / eligible</th><th>Applied</th><th>Shortlisted</th><th>Selected</th><th>Rejected</th><th>Withdrawn</th></tr></thead>
+    <tbody>
+    {% for row in summary %}
+      <tr><td>{{ row.name }}</td><td>{{ row.total }}</td><td>{{ row.open }}</td><td>{{ row.applied }}</td>
+        <td>{{ row.shortlisted }}</td><td>{{ row.selected }}</td><td>{{ row.rejected }}</td><td>{{ row.withdrawn }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p class="muted">No applications from consenting students yet.</p>{% endif %}
+</div>
+
+<div class="card">
+  <form method="get" class="filters">
+    <div class="field">
+      <label for="company">Company</label>
+      <select id="company" name="company">
+        <option value="">All</option>
+        {% for c in companies %}<option value="{{ c.pk }}"{% if c.pk|stringformat:"s" == company_id %} selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        <option value="">All</option>
+        {% for value, label in status_choices %}<option value="{{ value }}"{% if value == status %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><button class="btn" type="submit">Filter</button></div>
+  </form>
+</div>
+
+<div class="card">
+  {% if page.object_list %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Student</th><th>Company</th><th>Eligibility</th><th>Status</th><th>Record an update</th></tr></thead>
+    <tbody>
+    {% for app in page.object_list %}
+      <tr>
+        <td>{{ app.user.get_full_name|default:app.user.username }}</td>
+        <td>{{ app.company.name }}</td>
+        <td>{{ app.get_eligibility_status_display }}</td>
+        <td><span class="tag status-{{ app.application_status }}">{{ app.get_application_status_display }}</span></td>
+        <td>
+          <div class="actions">
+            {% for to, label in app.actions %}
+              <form class="inline" method="post" action="{% url 'manage_application_status' app.pk %}">{% csrf_token %}
+                <input type="hidden" name="to" value="{{ to }}">
+                <input type="hidden" name="next" value="{% url 'manage_applications' %}{% if querystring %}?{{ querystring }}{% endif %}">
+                <button class="btn small" type="submit">{{ label }}</button>
+              </form>
+            {% empty %}<span class="muted">-</span>{% endfor %}
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% include "content/_pager.html" %}
+  {% else %}<p class="muted">No applications match.</p>{% endif %}
+</div>
+{% endblock %}

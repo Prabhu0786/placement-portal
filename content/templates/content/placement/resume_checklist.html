@@ -1,0 +1,26 @@
+{% extends "accounts/base.html" %}
+{% block title %}Resume checklist - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Resume checklist</h1>
+<p><a href="{% url 'prepare_home' %}">&larr; Back</a></p>
+<div class="card">
+  <h2>{{ done }} of {{ total }} checks done</h2>
+  <div class="progress" role="progressbar" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ percent }}%"></span></div>
+  <p class="muted">Tick each item once your resume meets it. This list is private to you.
+    {% url 'resume_analyzer' as analyzer_url %}{% if analyzer_url %}You can also get AI feedback with the <a href="{{ analyzer_url }}">resume analyzer</a>.{% endif %}</p>
+</div>
+<form method="post">
+  {% csrf_token %}
+  <div class="card">
+    {% for item in items %}
+      <div class="field" style="padding: 8px 0; border-bottom: 1px solid var(--border); margin: 0;">
+        <label class="checkbox" for="item_{{ item.key }}">
+          <input type="checkbox" id="item_{{ item.key }}" name="item_{{ item.key }}"{% if item.done %} checked{% endif %}>
+          <span><strong>{{ item.title }}</strong><br><span class="muted">{{ item.help }}</span></span>
+        </label>
+      </div>
+    {% endfor %}
+    <p style="margin-top: 14px;"><button class="btn" type="submit">Save checklist</button></p>
+  </div>
+</form>
+{% endblock %}

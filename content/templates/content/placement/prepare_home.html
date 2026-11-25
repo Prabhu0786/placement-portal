@@ -1,0 +1,33 @@
+{% extends "accounts/base.html" %}
+{% block title %}Prepare for interviews - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Prepare for interviews</h1>
+<p class="muted">Everything you need to get ready: practise questions, polish your resume, and learn to explain your projects.</p>
+{% url 'ai_mock_home' as mock_url %}
+{% url 'resume_analyzer' as analyzer_url %}
+<div class="grid">
+  <div class="card">
+    <h2>Interview questions</h2>
+    <p class="muted">{{ interview_count }} approved question{{ interview_count|pluralize }} with model answers, plus tips on how to answer.</p>
+    <a class="btn" href="{% url 'interview_prep' %}">Open interview prep</a>
+  </div>
+  {% if mock_url %}
+  <div class="card">
+    <h2>AI mock interview</h2>
+    <p class="muted">Practise one question at a time and get feedback on every answer.</p>
+    <a class="btn secondary" href="{{ mock_url }}">Start a mock interview</a>
+  </div>
+  {% endif %}
+  <div class="card">
+    <h2>Resume checklist</h2>
+    <p class="muted">{{ checklist_done }} of {{ checklist_total }} checks done.</p>
+    <a class="btn" href="{% url 'resume_checklist' %}">Open checklist</a>
+    {% if analyzer_url %}<a class="btn secondary" href="{{ analyzer_url }}">AI resume analyzer</a>{% endif %}
+  </div>
+  <div class="card">
+    <h2>Explain your projects</h2>
+    <p class="muted">{% if project_count %}Answer the questions interviewers ask about your {{ project_count }} project{{ project_count|pluralize }}.{% else %}Add a project to your profile, then practise explaining it.{% endif %}</p>
+    <a class="btn" href="{% url 'project_list' %}">Project prompts</a>
+  </div>
+</div>
+{% endblock %}

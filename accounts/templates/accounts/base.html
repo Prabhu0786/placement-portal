@@ -164,6 +164,8 @@
             <a href="{% url 'assessment_list' %}">Practice &amp; Assessments</a>
             <a href="{% url 'progress' %}">Progress</a>
             <a href="{% url 'plan' %}">Plan</a>
+            <a href="{% url 'application_list' %}">Applications</a>
+            <a href="{% url 'prepare_home' %}">Prepare</a>
             <a href="{% url 'recommendations' %}">For you</a>
             <a href="{% url 'ai_chat' %}">AI Assistant</a>
             <a href="{% url 'resume_analyzer' %}">Resume Analyzer</a>
@@ -172,10 +174,12 @@
 
           {% if user.is_tpo %}
             <a href="{% url 'reports_home' %}">Reports</a>
+            <a href="{% url 'manage_applications' %}">Applications</a>
           {% endif %}
 
           <a href="{% url 'resource_list' %}">Resources</a>
           <a href="{% url 'company_list' %}">Companies</a>
+          <a href="{% url 'notice_list' %}">Notices</a>
 
           {% if user.is_tpo or user.is_faculty %}
             <a href="{% url 'manage_home' %}">Manage</a>

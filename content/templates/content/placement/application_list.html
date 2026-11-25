@@ -1,0 +1,64 @@
+{% extends "accounts/base.html" %}
+{% block title %}My applications - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>My applications</h1>
+<p class="muted">Keep track of the companies you are interested in, your eligibility, and how each application is going.</p>
+
+<div class="card">
+  <h2>Add a company</h2>
+  {% if form.fields.company.queryset %}
+    <form method="post" action="{% url 'application_add' %}" class="filters">
+      {% csrf_token %}
+      <div class="field"><label for="{{ form.company.id_for_label }}">Company</label>{{ form.company }}</div>
+      <div class="field"><button class="btn" type="submit">Add to my tracker</button></div>
+    </form>
+  {% else %}
+    <p class="muted">No other published companies to add. See the <a href="{% url 'company_list' %}">company list</a>.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Tracked companies</h2>
+  {% if applications %}
+    {% for app in applications %}
+      <div style="padding: 14px 0; border-bottom: 1px solid var(--border);">
+        <div class="row">
+          <div>
+            <strong><a href="{% url 'company_detail' app.company.pk %}">{{ app.company.name }}</a></strong>
+            <span class="tag status-{{ app.application_status }}">{{ app.get_application_status_display }}</span>
+            <div class="muted">Eligibility: {{ app.get_eligibility_status_display }}</div>
+          </div>
+          <div class="actions">
+            {% for to, label in app.actions %}
+              <form class="inline" method="post" action="{% url 'application_status' app.pk %}">{% csrf_token %}
+                <input type="hidden" name="to" value="{{ to }}"><button class="btn small{% if to == 'withdrawn' %} danger{% endif %}" type="submit">{{ label }}</button>
+              </form>
+            {% endfor %}
+          </div>
+        </div>
+        {% if not app.is_final %}
+        <details>
+          <summary>Check eligibility or remove</summary>
+          {% if app.company.eligibility %}<p class="muted"><strong>Company requirements:</strong> {{ app.company.eligibility|linebreaksbr }}</p>{% endif %}
+          <form method="post" action="{% url 'application_eligibility' app.pk %}" class="row" style="justify-content: flex-start;">{% csrf_token %}
+            <label for="elig-{{ app.pk }}" style="margin: 0;">My eligibility</label>
+            <select id="elig-{{ app.pk }}" name="eligibility" style="width: auto;">
+              {% for value, label in eligibility_choices %}<option value="{{ value }}"{% if value == app.eligibility_status %} selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+            <button class="btn secondary small" type="submit">Save</button>
+          </form>
+        </details>
+        {% endif %}
+        {% if app.application_status == "interested" or app.application_status == "eligible" or app.application_status == "withdrawn" %}
+          <form method="post" action="{% url 'application_delete' app.pk %}" style="margin-top: 8px;" onsubmit="return confirm('Remove this company from your tracker?');">{% csrf_token %}
+            <button class="btn danger small" type="submit">Remove from tracker</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="muted">You are not tracking any company yet. Add one above, or press "Track this company" on a company page.</p>
+  {% endif %}
+</div>
+<p class="muted">Only you and, for students who have given consent, the placement coordinator can see your applications.</p>
+{% endblock %}

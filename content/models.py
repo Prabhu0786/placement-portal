@@ -294,3 +294,5 @@ class Application(models.Model):
             f"{self.user} -> {self.company} "
             f"({self.get_application_status_display()})"
         )
+
+from .placement_models import ChecklistProgress, ContestParticipation, ProjectNote  # noqa: E402,F401

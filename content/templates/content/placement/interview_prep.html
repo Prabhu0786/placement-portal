@@ -1,0 +1,47 @@
+{% extends "accounts/base.html" %}
+{% block title %}Interview preparation - Placement Prep Portal{% endblock %}
+{% block content %}
+<h1>Interview preparation</h1>
+<p><a href="{% if user.is_student %}{% url 'prepare_home' %}{% else %}{% url 'dashboard' %}{% endif %}">&larr; Back</a></p>
+
+<div class="card">
+  <h2>How to answer well</h2>
+  <ul>
+    <li><strong>Think first.</strong> A few seconds of silence is fine. Then answer in 4 to 8 sentences.</li>
+    <li><strong>Behavioural questions:</strong> use the <strong>STAR</strong> method: <strong>S</strong>ituation, <strong>T</strong>ask, <strong>A</strong>ction, <strong>R</strong>esult. Spend most of the time on what <em>you</em> did.</li>
+    <li><strong>Technical questions:</strong> state the idea in one sentence, then explain with a small example. If you do not know, say so and describe how you would find out.</li>
+    <li><strong>HR questions:</strong> be honest, specific and positive. Link your answer to the role.</li>
+    <li><strong>Always:</strong> give one concrete example instead of general claims, and keep each answer to one or two minutes.</li>
+  </ul>
+  <p>
+    {% if user.is_student %}
+      <a class="btn" href="{% url 'assessment_list' %}">Practise questions</a>
+      {% url 'ai_mock_home' as mock_url %}{% if mock_url %}<a class="btn secondary" href="{{ mock_url }}">AI mock interview</a>{% endif %}
+    {% endif %}
+  </p>
+</div>
+
+{% if groups %}
+  {% for topic, questions in groups %}
+    <div class="card">
+      <h2>{{ topic.subject }} / {{ topic.name }}</h2>
+      <ul class="plain">
+        {% for q in questions %}
+          <li>
+            <strong>{{ q.text }}</strong>
+            {% if q.answer or q.explanation %}
+              <details>
+                <summary>Model answer and tips</summary>
+                {% if q.answer %}<p>{{ q.answer|linebreaksbr }}</p>{% endif %}
+                {% if q.explanation %}<p class="muted">{{ q.explanation|linebreaksbr }}</p>{% endif %}
+              </details>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card"><p class="muted">No interview questions have been published yet. Your placement coordinator will add them here.</p></div>
+{% endif %}
+{% endblock %}

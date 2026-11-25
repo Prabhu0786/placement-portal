@@ -1,0 +1,59 @@
+{% extends "accounts/base.html" %}
+{% block title %}Notices and contests - Placement Prep Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Notices and contests</h1>
+  {% if user.is_tpo or user.is_faculty %}<a class="btn secondary" href="{% url 'manage_notices' %}">Manage notices</a>{% endif %}
+</div>
+
+<div class="card">
+  <h2>Upcoming contests</h2>
+  {% if upcoming %}
+    <ul class="plain">
+      {% for c in upcoming %}
+        <li>
+          <div class="row">
+            <div>
+              <strong>{{ c.title }}</strong> <span class="tag">{{ c.date|date:"D j M Y" }}</span>
+              {% if c.registered %}<span class="tag status-completed">Registered</span>{% endif %}
+              {% if c.description %}<div class="muted">{{ c.description|linebreaksbr }}</div>{% endif %}
+            </div>
+            {% if user.is_student %}
+              {% if c.registered %}
+                <form method="post" action="{% url 'contest_withdraw' c.pk %}">{% csrf_token %}<button class="btn secondary small" type="submit">Withdraw</button></form>
+              {% else %}
+                <form method="post" action="{% url 'contest_register' c.pk %}">{% csrf_token %}<button class="btn small" type="submit">Register</button></form>
+              {% endif %}
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">No upcoming contests right now.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Notices</h2>
+  {% if notices %}
+    <ul class="plain">
+      {% for n in notices %}
+        <li><strong>{{ n.title }}</strong> <span class="muted">{{ n.date|date:"j M Y" }}</span>
+          {% if n.description %}<div>{{ n.description|linebreaksbr }}</div>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">No notices have been published yet.</p>
+  {% endif %}
+</div>
+
+{% if past %}
+<div class="card">
+  <h2>Past contests</h2>
+  <ul class="plain">
+    {% for c in past %}<li>{{ c.title }} <span class="muted">{{ c.date|date:"j M Y" }}</span>{% if c.registered %} <span class="tag">You took part</span>{% endif %}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% endblock %}

@@ -514,6 +514,36 @@
       </a>
     </article>
 
+    <!-- PHASE 8: PREPARATION, APPLICATIONS, NOTICES -->
+    {% load placement_tags %}
+    <article class="card">
+      <div style="font-size:1.55rem;margin-bottom:8px">🎯</div>
+      <h2>Prepare for interviews</h2>
+      <p class="muted">Interview questions with model answers, a resume checklist and project prompts.</p>
+      <a class="btn secondary" href="{% url 'prepare_home' %}">Open preparation →</a>
+    </article>
+
+    <article class="card">
+      <div style="font-size:1.55rem;margin-bottom:8px">🏢</div>
+      <h2>My applications</h2>
+      <p class="muted">Track companies, your eligibility and the status of each application.</p>
+      <a class="btn secondary" href="{% url 'application_list' %}">Open tracker →</a>
+    </article>
+
+    <article class="card">
+      <div style="font-size:1.55rem;margin-bottom:8px">📢</div>
+      <h2>Latest notices</h2>
+      {% latest_notices 3 as recent_notices %}
+      {% if recent_notices %}
+        <ul style="padding-left:18px;margin:0 0 10px">
+          {% for n in recent_notices %}<li>{{ n.title }} <span class="muted">({{ n.date|date:"j M" }})</span></li>{% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No notices yet.</p>
+      {% endif %}
+      <a class="btn secondary" href="{% url 'notice_list' %}">All notices →</a>
+    </article>
+
     <!-- AI MOCK INTERVIEW -->
     <article class="card">
       <div style="font-size:1.55rem;margin-bottom:8px">🎤</div>
